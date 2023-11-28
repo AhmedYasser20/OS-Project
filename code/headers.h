@@ -11,7 +11,7 @@
 #include <unistd.h>
 #include <signal.h>
 
-#include"IO_Functions.h"
+#include "IO_Functions/IO_Functions.h"
 
 typedef short bool;
 #define true 1
