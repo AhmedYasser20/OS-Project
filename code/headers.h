@@ -13,6 +13,7 @@
 #include<malloc.h>
 
 #include "IO_Functions/IO_Functions.h"
+#include "DataStructures/DataStructures.h"
 
 typedef short bool;
 #define true 1
