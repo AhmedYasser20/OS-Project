@@ -18,7 +18,7 @@ struct QueueProcessNode* NewNode(struct Process item);
 
 struct Queue* CreateQueueOfProcess(); 
 
-void Push(struct Queue *q,struct QueueProcessNode Item);
+void Push(struct Queue *q,struct Process Item);
 
 void Pop(struct Queue *q);
 
