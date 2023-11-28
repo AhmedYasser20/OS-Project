@@ -28,7 +28,7 @@ int main(int argc, char *argv[])
 
         while (numberOfProcess)
         {
-            
+
              //here we check if process arrived
             currentTime = getClk();
             if (nextArrivalTime > currentTime)
@@ -82,6 +82,13 @@ int main(int argc, char *argv[])
 
 
         }
+    }
+    //HPF
+    else if(SchedullingAlgo == 1)
+    {  //Input process ids ,Arrival time ,Priority , running time
+       int  currentTime = getClk();
+
+       //output total time ,seq of the runned processes
     }
     // upon termination release the clock resources.
 

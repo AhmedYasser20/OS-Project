@@ -25,10 +25,12 @@ void ReadInputFile(char *filename,struct Queue* q,int *NumberOfProcesses){
                 if(_BufferChar[i]!=' '){
                     int num=atoi(&_BufferChar[i++]);
 
-                    while(_BufferChar[i]!=' '){
+                    while(_BufferChar[i]!=' ')
+                    {
                         num*=10;
                         num+=atoi(&_BufferChar[i++]);
-                    }
+                    } 
+                    printf("%d\n",num);  
                     switch (j)
                     {
                     case 0:
