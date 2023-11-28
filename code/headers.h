@@ -1,3 +1,5 @@
+#ifndef HEADERS_H
+#define HEADERS_H
 #include <stdio.h>      //if you don't use scanf/printf change this include
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -12,8 +14,13 @@
 #include <signal.h>
 #include<malloc.h>
 
-#include "IO_Functions/IO_Functions.h"
-#include "DataStructures/DataStructures.h"
+
+#include "DataStructures.h"
+#include "QueueOfProcesses.h"
+#include "IO_Functions.h"
+
+
+
 
 typedef short bool;
 #define true 1
@@ -69,3 +76,4 @@ void destroyClk(bool terminateAll)
         killpg(getpgrp(), SIGINT);
     }
 }
+#endif

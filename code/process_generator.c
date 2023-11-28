@@ -7,7 +7,9 @@ int main(int argc, char * argv[])
     signal(SIGINT, clearResources);
     // TODO Initialization
     // 1. Read the input files.
-    ReadInputFile("processes.txt");
+    struct Queue * ProcessesQueue=CreateQueueOfProcess();
+    int Var=0; 
+    ReadInputFile("processes.txt",ProcessesQueue,&Var);
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
     // 3. Initiate and create the scheduler and clock processes.
     // 4. Use this function after creating the clock process to initialize clock
@@ -19,7 +21,7 @@ int main(int argc, char * argv[])
     // 5. Create a data structure for processes and provide it with its parameters.
     // 6. Send the information to the scheduler at the appropriate time.
     // 7. Clear clock resources
-    destroyClk(true);
+   destroyClk(true);
 }
 
 void clearResources(int signum)
