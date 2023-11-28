@@ -9,6 +9,14 @@ struct Process
     int Priority;   //Priority of Processes
 };
 
+struct array
+{
+    int size;
+    int *ptr;
+    
+};
+
+
 
 
 #endif
