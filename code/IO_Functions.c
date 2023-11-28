@@ -5,29 +5,32 @@
 #include "IO_Functions.h"
 
 void ReadInputFile(char *filename,struct Queue* q,int *NumberOfProcesses){
-   FILE *_ptr;
-   _ptr=fopen(filename,"r");
+   FILE *ptr;
+   ptr=fopen(filename,"r");
 
-    if(_ptr==NULL){
+    if(ptr==NULL){
         puts("Error in opening file");
     }
-    char *_BufferChar=NULL;
-    size_t  _SizeOFBuffer=0;
-    while(getline(&_BufferChar,&_SizeOFBuffer,_ptr)!=-1){
-        if(_BufferChar[0]=='#'){
+    char *BufferChar=NULL;
+    size_t SizeOFBuffer=0;
+    while(getline(&BufferChar,&SizeOFBuffer,ptr)!=-1){
+        if(BufferChar[0]=='#'){
             continue;
         }
         else{
             struct Process temp;
             int j=0;
-            for (int i = 0; i < strlen(_BufferChar); i++)
+            for (int i = 0; i < strlen(BufferChar); i++)
             {
-                if(_BufferChar[i]!=' '){
-                    int num=atoi(&_BufferChar[i++]);
-
-                    while(_BufferChar[i]!=' '){
+                
+                if(BufferChar[i]>='0' && BufferChar[i]<='9'){
+                    int num=BufferChar[i]-'0';
+                    i++;
+                    while(BufferChar[i]>='0' && BufferChar[i]<='9'){
+                      
                         num*=10;
-                        num+=atoi(&_BufferChar[i++]);
+                        num+=BufferChar[i]-'0';
+                        i++;
                     }
                     switch (j)
                     {
@@ -48,10 +51,11 @@ void ReadInputFile(char *filename,struct Queue* q,int *NumberOfProcesses){
                     }
                     j++;
                 }
+             
             }
           struct QueueProcessNode* Node=NewNode(temp);
           Push(q,temp);
-          *NumberOfProcesses++;   
+          *NumberOfProcesses=*NumberOfProcesses+1;   
         }
     }
 }

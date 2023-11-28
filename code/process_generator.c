@@ -11,6 +11,7 @@ int main(int argc, char * argv[])
     int Var=0; 
     ReadInputFile("processes.txt",ProcessesQueue,&Var);
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
+    
     // 3. Initiate and create the scheduler and clock processes.
     // 4. Use this function after creating the clock process to initialize clock
     initClk();
