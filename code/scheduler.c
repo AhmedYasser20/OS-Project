@@ -84,7 +84,7 @@ int main(int argc, char *argv[])
         }
     }
     //HPF
-    else if(SchedullingAlgo == 1)
+    else if(SchedullingAlgo == 1)// ana sayed
     {  //Input process ids ,Arrival time ,Priority , running time
        int  currentTime = getClk();
 
