@@ -2,7 +2,7 @@
 
 void clearResources(int);
 void CreateCLK();
-void CreateScheduler(int choice,int Quntam);
+void CreateScheduler(char choice,char Quntam);
 
 int main(int argc, char * argv[])
 {
@@ -13,10 +13,11 @@ int main(int argc, char * argv[])
     int NumberOfProcesses=0; 
     ReadInputFile("processes.txt",ProcessesQueue,&NumberOfProcesses);
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
-    int Quntam=0;
-    int choice=ChooseAlgorithm(&Quntam);
+    char Quntam=0;
+    char choice=ChooseAlgorithm(&Quntam);
     // 3. Initiate and create the scheduler and clock processes.
     CreateCLK();
+    CreateScheduler(choice,Quntam);
     // 4. Use this function after creating the clock process to initialize clock
     initClk();
     // To get time use this
@@ -47,11 +48,12 @@ void CreateCLK(){
     }
 }
 
-void CreateScheduler(int choice,int Quntam){
+void CreateScheduler(char choice,char Quntam){
     int Schedulerid=fork();
 
     if(Schedulerid==0){
-         execl("scheduler.out",choice,Quntam,NULL);
+         char  paras[]={choice,Quntam};
+         execl("scheduler.out",paras,NULL);
     }
     if(Schedulerid<0){
         printf("Error while creating Scheduler");
