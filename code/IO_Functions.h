@@ -7,7 +7,6 @@
 
 void ReadInputFile(char *filename,struct Queue* q,int *NumberOfProcesses);
 
-
-
+int ChooseAlgorithm(int *Quntam);
 
 #endif

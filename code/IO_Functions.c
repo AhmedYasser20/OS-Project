@@ -4,6 +4,23 @@
 #include "QueueOfProcesses.h"
 #include "IO_Functions.h"
 
+int ChooseAlgorithm(int *Quntam){
+    int choice;
+    do{
+    printf("Please Choose a one of those Algorithms\n");
+    printf("1-Non-Preemptive Highest Priority First (HPF)\n");
+    printf("2-Shortest Remaining time Next (SRTN)\n");
+    printf("3-Round Robin (RR)\n");
+    printf("Enter Your Choice: ");
+    scanf("%d",&choice);
+    if(choice==3){
+        printf("Please Quntam of Round Robin: ");
+        scanf("%d",Quntam);
+    }
+    } while(choice<1 || choice >3);
+    return choice;
+}
+
 void ReadInputFile(char *filename,struct Queue* q,int *NumberOfProcesses){
    FILE *ptr;
    ptr=fopen(filename,"r");

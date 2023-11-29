@@ -1,6 +1,8 @@
 #include "headers.h"
 
 void clearResources(int);
+void CreateCLK();
+void CreateScheduler(int choice,int Quntam);
 
 int main(int argc, char * argv[])
 {
@@ -8,11 +10,13 @@ int main(int argc, char * argv[])
     // TODO Initialization
     // 1. Read the input files.
     struct Queue * ProcessesQueue=CreateQueueOfProcess();
-    int Var=0; 
-    ReadInputFile("processes.txt",ProcessesQueue,&Var);
+    int NumberOfProcesses=0; 
+    ReadInputFile("processes.txt",ProcessesQueue,&NumberOfProcesses);
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
-    
+    int Quntam=0;
+    int choice=ChooseAlgorithm(&Quntam);
     // 3. Initiate and create the scheduler and clock processes.
+    CreateCLK();
     // 4. Use this function after creating the clock process to initialize clock
     initClk();
     // To get time use this
@@ -28,4 +32,29 @@ int main(int argc, char * argv[])
 void clearResources(int signum)
 {
     //TODO Clears all resources in case of interruption
+}
+
+void CreateCLK(){
+    int clk_pid=fork();
+
+    if(clk_pid==0){
+        execl("clk.out"," ",NULL);
+    }
+
+    if(clk_pid<0){
+        printf("Error while creating clock");
+        exit(-1);
+    }
+}
+
+void CreateScheduler(int choice,int Quntam){
+    int Schedulerid=fork();
+
+    if(Schedulerid==0){
+         execl("scheduler.out",choice,Quntam,NULL);
+    }
+    if(Schedulerid<0){
+        printf("Error while creating Scheduler");
+        exit(-1);
+    }
 }
