@@ -2,7 +2,8 @@
 #include <stdlib.h>
 
 
-struct QueueProcessNode* NewNode(struct Process item){
+struct QueueProcessNode* NewNode(struct Process item)
+{
         struct QueueProcessNode * temp=(struct QueueProcessNode *)
          malloc(sizeof(struct QueueProcessNode));
          temp->key=item;
