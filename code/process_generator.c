@@ -3,10 +3,11 @@
 void clearResources(int);
 void CreateCLK();
 void CreateScheduler(char choice,char Quntam);
-
+ int QueueKey;
 int main(int argc, char * argv[])
 {
     signal(SIGINT, clearResources);
+    QueueKey =msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY,0666 | IPC_CREAT);
     // TODO Initialization
     // 1. Read the input files.
     struct Queue * ProcessesQueue=CreateQueueOfProcess();
@@ -25,6 +26,21 @@ int main(int argc, char * argv[])
     printf("current time is %d\n", x);
     // TODO Generation Main Loop
     // 5. Create a data structure for processes and provide it with its parameters.
+    int time;
+    while(NumberOfProcesses){
+        time=getClk();
+        if(ProcessesQueue->head->key.ArriveTime<=time){
+            
+            struct MsgGeneratorScheduler temp;
+            temp.type=1;
+            temp.p=ProcessesQueue->head->key;
+            int sendVal=msgsnd(QueueKey,&temp,sizeof(temp.p),!IPC_NOWAIT);
+            NumberOfProcesses--;
+            Pop(ProcessesQueue);
+            printf("%d \n",NumberOfProcesses);
+        }
+    }
+    
     // 6. Send the information to the scheduler at the appropriate time.
     // 7. Clear clock resources
    destroyClk(true);
@@ -33,6 +49,7 @@ int main(int argc, char * argv[])
 void clearResources(int signum)
 {
     //TODO Clears all resources in case of interruption
+    msgctl(QueueKey,IPC_RMID,(struct msqid_ds *)0);
 }
 
 void CreateCLK(){
