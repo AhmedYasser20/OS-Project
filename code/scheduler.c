@@ -86,8 +86,43 @@ int main(int argc, char *argv[])
     //HPF
     else if(SchedullingAlgo == 1)// ana sayed
     {  //Input process ids ,Arrival time ,Priority , running time
-       int  currentTime = getClk();
+        int time;
+        int Pid;
+        char* state;
+        int ArriveT;
+        int TotalT;
+        int RemainingT;
+        int ResponseT;
+        int TA;
+        int WAT;
+        
+        int RunningT;
+        int waitingT;
 
+        int  currentTime = getClk();
+        int rec_val;
+        int QueueKey =msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY,0666 | IPC_CREAT);
+        
+        struct MsgGeneratorScheduler temp;
+        int NumberOfProcesses =5;
+
+        while(NumberOfProcesses)
+        {   
+            rec_val = msgrcv(QueueKey, &temp, sizeof(temp.p), 1 , !IPC_NOWAIT);
+            while(rec_val != -1 )// try to make the queue free of processes
+            {
+                rec_val = msgrcv(QueueKey, &temp, sizeof(temp.p), 1 , IPC_NOWAIT);
+                printf("id=%d\n",temp.p.id);
+            }
+
+            rec_val = msgrcv(QueueKey, &temp, sizeof(temp.p), 1 , !IPC_NOWAIT);
+            printf("id=%d\n",temp.p.id);
+
+
+            NumberOfProcesses--;
+        }
+       
+       
        //output total time ,seq of the runned processes
     }
     // upon termination release the clock resources.

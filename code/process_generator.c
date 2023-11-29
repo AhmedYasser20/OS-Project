@@ -37,7 +37,6 @@ int main(int argc, char * argv[])
             int sendVal=msgsnd(QueueKey,&temp,sizeof(temp.p),!IPC_NOWAIT);
             NumberOfProcesses--;
             Pop(ProcessesQueue);
-            printf("%d \n",NumberOfProcesses);
         }
     }
     
