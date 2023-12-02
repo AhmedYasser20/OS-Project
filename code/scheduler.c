@@ -1,27 +1,52 @@
 #include "headers.h"
 
 
-int QueueKey;
-struct Queue *ReadyQueue;
-bool Genetor=true;
+int QueueKey;               // Key of Queue between Scheduler and Processes Generator
+struct Queue *ReadyQueue;   // Inital Queue using to store Processes That read Form Generator
+bool Generator = true;      // Boolen used to Notify if Generator Finshed sending process or not
+bool isRunning=false;       // Boolen used to Notify Schedular if Process is finshed or not  
 
-bool isRunning=false;
+
+/*
+    Function name: SignalHandlerGentorEnd(
+    Description:    Signal Handler for Signal User 1 - this Signal is one way form Generator to Scheduler 
+                    Used to Set Generator Boolen
+    Input: int
+    Output: void 
+
+*/
 
 void SignalHandlerGentorEnd(int sig){
-    printf("Flag");
-    Genetor=false;
+    Generator=false;
 }
+
+/*
+    Function name: SignalHandlerProcessesEnd
+    Description:    Signal Handler for Signal User 2 - this Signal is one way form  Forked Process to Scheduler 
+                    Used to Set IsRunning Boolen
+    Input: int
+    Output: void 
+
+*/
 
 void SignalHandlerProcessesEnd(int sig){
     isRunning=false;
 }
 
-void ForkProcess(int x){
+/*
+    Function name: ForkProcess
+    Description: This Function used to Fork the process and give it its Quantum
+                 Quantum : Runtime of process after finshed it send Signal User 2 to Scheduler   
+    Input: int
+    Output: void 
+*/
+
+
+void ForkProcess(int Quantum){
     int processid=fork();
-        printf("Forked %d\n",processid);
     if(processid==0){
 
-         char para=x;
+         char para=Quantum;
          execl("process.out",&para,NULL);
     }
     if(processid<0){
@@ -29,6 +54,8 @@ void ForkProcess(int x){
         exit(-1);
     }
 }
+
+
 
 void HPF(){
     if(!isRunning && ReadyQueue->head!=NULL){
@@ -56,7 +83,7 @@ int main(int argc , char*argv[]){
            Push(ReadyQueue,temp.p); 
         }
         HPF();    
-    }while(Genetor || ReadyQueue->head!=NULL);
+    }while(Generator || ReadyQueue->head!=NULL);
     
     
     //destroyClk(true);
