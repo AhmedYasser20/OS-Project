@@ -1,4 +1,5 @@
 #include "DataStructures.h"
+
 #include "headers.h"
 
 int main(int argc, char *argv[])
@@ -14,10 +15,12 @@ int main(int argc, char *argv[])
 
         int numberOfProcess, currentTime, Quantum = 1;
 
-        struct array arrProcessesIds, arrArrivalTimeOfProcesses, arrRunTimeOfProcesses, arrRemaingTimeOfProcesses; // array carries process need to be executed if the id =-1 then the process was here terminated
-        // makeArray(numberOfProcess, arrProcessesIds);
-        // makeArray(numberOfProcess, arrArrivalTimeOfProcesses);
-        // makeArray(numberOfProcess, arrRunTimeOfProcesses);
+        struct array  arrArrivalTimeOfProcesses, arrRunTimeOfProcesses, arrRemaingTimeOfProcesses; // array carries process need to be executed if the id =-1 then the process was here terminated
+        //arrProcessesIds
+          makeArray(numberOfProcess, arrArrivalTimeOfProcesses);
+          makeArray(numberOfProcess, arrRunTimeOfProcesses);
+        struct Queue * circularQueu;
+        circularQueu=CreateQueueOfProcess();
         int nextArrivalTimeindex = 0;                                              // this variable indicates index of  the next arrival process in arrival array
         int nextArrivalTime = arrArrivalTimeOfProcesses.ptr[nextArrivalTimeindex]; // this variable indicates when the time of  arrival of the next process
         int numberOfArrivedProcess = 0;

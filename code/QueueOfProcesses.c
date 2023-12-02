@@ -11,7 +11,8 @@ struct QueueProcessNode* NewNode(struct Process item)
          return temp;
 }
 
-struct Queue* CreateQueueOfProcess(){
+struct Queue* CreateQueueOfProcess()
+{
     struct Queue* q=(struct Queue*)malloc(sizeof(struct Queue));
     q->head=q->tail=NULL;
     return q;

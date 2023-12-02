@@ -34,5 +34,5 @@ struct Log
 };
 
 
-
+void makeArray(int N,struct array arr);
 #endif
