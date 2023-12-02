@@ -28,6 +28,12 @@ typedef short bool;
 
 #define SHKEY 300
 
+#define MSG_QUEUE_GENERATOR_SCHEDULER_KEY 254
+
+struct MsgGeneratorScheduler {
+    long type;
+    struct Process p;
+};
 
 ///==============================
 //don't mess with this variable//
