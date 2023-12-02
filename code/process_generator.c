@@ -3,6 +3,7 @@
 void clearResources(int);
 void CreateCLK();
 void CreateScheduler(char choice,char Quntam);
+int Schedulerid;
  int QueueKey;
 int main(int argc, char * argv[])
 {
@@ -30,16 +31,17 @@ int main(int argc, char * argv[])
     while(NumberOfProcesses){
         time=getClk();
         if(ProcessesQueue->head->key.ArriveTime<=time){
-            
             struct MsgGeneratorScheduler temp;
             temp.type=1;
             temp.p=ProcessesQueue->head->key;
-            int sendVal=msgsnd(QueueKey,&temp,sizeof(temp.p),!IPC_NOWAIT);
+            msgsnd(QueueKey,&temp,sizeof(temp.p),!IPC_NOWAIT);
             NumberOfProcesses--;
             Pop(ProcessesQueue);
         }
     }
-    
+    kill(Schedulerid,SIGUSR1);
+    int status;
+    waitpid(Schedulerid,&status,0);
     // 6. Send the information to the scheduler at the appropriate time.
     // 7. Clear clock resources
    destroyClk(true);
