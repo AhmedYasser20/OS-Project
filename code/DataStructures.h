@@ -1,6 +1,7 @@
 #ifndef DATA_STRUCTURES_HEADER
 #define DATA_STRUCTURES_HEADER
 
+
 struct Process
 {
     int id;         //ID for Each Process Unique
@@ -8,6 +9,7 @@ struct Process
     int Runtime;    //run time  (the time that OS give the process)
     int Priority;   //Priority of Processes
 };
+
 
 struct array
 {
