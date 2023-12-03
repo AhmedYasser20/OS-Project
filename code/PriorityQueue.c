@@ -1,66 +1,69 @@
-// C code to implement Priority Queue 
-// using Linked List 
 #include "PriorityQueue.h"
-// Node 
-typedef struct node { 
-	int data; 
 
-	// Lower values indicate higher priority 
-	int priority; 
 
-	struct node* next; 
-
-} Node; 
-
-// Function to Create A New Node 
-Node* newNode(int d, int p) 
+// Function to Create A New PriorityQueueProcessNode 
+PriorityQueueProcessNode* newPriorityQueueProcessNode(struct Process pr) 
 { 
-	Node* temp = (Node*)malloc(sizeof(Node)); 
-	temp->data = d; 
-	temp->priority = p; 
+	PriorityQueueProcessNode* temp = (PriorityQueueProcessNode*)malloc(sizeof(PriorityQueueProcessNode)); 	
+	temp->p = pr; 
 	temp->next = NULL; 
 
 	return temp; 
 } 
 
-// Return the value at head 
-int peek(Node** head) 
+
+PriorityQueueOfProcesses* CreatePriorityQueueOfProcesses(){
+    PriorityQueueOfProcesses* q=(PriorityQueueOfProcesses*)malloc(sizeof(PriorityQueueOfProcesses));
+	q->head=NULL;
+    return q;
+}
+
+// Return the Process at head 
+struct Process peek(PriorityQueueOfProcesses*queue) 
 { 
-	return (*head)->data; 
+	return queue->head->p;
 } 
 
-// Removes the element with the 
+// Removes the Process with the 
 // highest priority from the list 
-void pop(Node** head) 
+void pop(PriorityQueueOfProcesses*queue) 
 { 
-	Node* temp = *head; 
-	(*head) = (*head)->next; 
+
+	PriorityQueueProcessNode* temp = queue->head; 
+	queue->head=queue->head->next;
 	free(temp); 
 } 
 
 // Function to push according to priority 
-void push(Node** head, int d, int p) 
+void push(PriorityQueueOfProcesses *queue ,struct Process pr) 
 { 
-	Node* start = (*head); 
+	printf("pushing in PQ \n");
+	PriorityQueueProcessNode* start = queue->head; 
 
-	// Create new Node 
-	Node* temp = newNode(d, p); 
+	// Create new PriorityQueueProcessNode 
+	PriorityQueueProcessNode* temp = newPriorityQueueProcessNode(pr); 
 
 	// Special Case: The head of list has lesser 
 	// priority than new node. So insert new 
 	// node before head node and change head node. 
-	if ((*head)->priority > p) { 
+	if ( queue->head == NULL ) { 
 
 		// Insert New Node before head 
-		temp->next = *head; 
-		(*head) = temp; 
+		 
+		queue->head= temp;
+		printf("finishing pushing\n");
+		return ;
+	} 
+	else if (queue->head->p.Priority > pr.Priority) { 
+
+		// Insert New Node before head 
+		temp->next = queue->head; 
+		queue->head = temp; 
 	} 
 	else { 
-
 		// Traverse the list and find a 
 		// position to insert new node 
-		while (start->next != NULL && 
-			start->next->priority < p) { 
+		while (start->next != NULL && start->next->p.Priority < pr.Priority) { 
 			start = start->next; 
 		} 
 
@@ -69,28 +72,12 @@ void push(Node** head, int d, int p)
 		temp->next = start->next; 
 		start->next = temp; 
 	} 
+	printf("finishing pushing\n");
 } 
+
 
 // Function to check is list is empty 
-int isEmpty(Node** head) 
+int isEmpty(PriorityQueueOfProcesses *queue) 
 { 
-	return (*head) == NULL; 
-} 
-
-// Driver code 
-int main() 
-{ 
-	// Create a Priority Queue 
-	// 7->4->5->6 
-	Node* pq = newNode(4, 1); 
-	push(&pq, 5, 2); 
-	push(&pq, 6, 3); 
-	push(&pq, 7, 0); 
-
-	while (!isEmpty(&pq)) { 
-		printf("%d ", peek(&pq)); 
-		pop(&pq); 
-	} 
-
-	return 0; 
+	return queue->head == NULL;
 } 

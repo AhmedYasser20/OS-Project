@@ -1,35 +1,39 @@
 // C code to implement Priority Queue 
 // using Linked List 
+#pragma once
 #include <stdio.h> 
 #include <stdlib.h> 
 #include "DataStructures.h"
 
 
-// Node 
-typedef struct node { 
-	int data; 
+// PriorityQueueProcessNode 
+typedef struct PriorityQueueProcessNode { 
     struct Process p;
+	//Lower values indicate higher priority 
 
-	// Lower values indicate higher priority 
-	int priority; 
+	struct PriorityQueueProcessNode* next; 
 
-	struct node* next; 
+} PriorityQueueProcessNode; 
 
-} Node; 
+typedef struct PriorityQueueOfProcesses{
+	PriorityQueueProcessNode* head;
+}PriorityQueueOfProcesses;
 
-// Function to Create A New Node 
-Node* newNode(int d, int p);
+
+PriorityQueueOfProcesses* CreatePriorityQueueOfProcesses();
+// Function to Create A New PriorityQueueProcessNode 
+PriorityQueueProcessNode* newPriorityQueueProcessNode(struct Process p);
 
 // Return the value at head 
-int peek(Node** head);
+struct Process peek(PriorityQueueOfProcesses *queue);
 
 
 // Removes the element with the 
 // highest priority from the list 
-void pop(Node** head);
+void pop(PriorityQueueOfProcesses*queue);
 
 // Function to push according to priority 
-void push(Node** head, int d, int p);
+void push(PriorityQueueOfProcesses *queue, struct Process pr);
 
 // Function to check is list is empty 
-int isEmpty(Node** head);
+int isEmpty(PriorityQueueOfProcesses *queue);

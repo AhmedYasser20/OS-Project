@@ -8,8 +8,12 @@ int main(int agrc, char * argv[])
     initClk();
     int start =getClk();
     printf("Process here start %d\n",start);
-    remainingtime=getClk()+5;
-   
+
+    printf("run Time= %d\n",*(argv[1]) );
+
+    remainingtime=getClk()+ *(argv[1]) ;
+    printf("rem Time= %d\n",remainingtime );
+
     //TODO it needs to get the remaining time from somewhere
     //remainingtime = ??;
     while (remainingtime > start)

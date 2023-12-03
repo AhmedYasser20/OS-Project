@@ -19,6 +19,8 @@
 #include "QueueOfProcesses.h"
 #include "IO_Functions.h"
 
+#include "PriorityQueue.h"
+
 
 
 

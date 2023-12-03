@@ -2,7 +2,7 @@
 
 
 int QueueKey;               // Key of Queue between Scheduler and Processes Generator
-struct Queue *ReadyQueue;   // Inital Queue using to store Processes That read Form Generator
+struct PriorityQueueOfProcesses *HPFReadyQueue;   // Inital Queue using to store Processes That read Form Generator
 bool Generator = true;      // Boolen used to Notify if Generator Finshed sending process or not
 bool isRunning=false;       // Boolen used to Notify Schedular if Process is finshed or not  
 
@@ -46,8 +46,9 @@ void ForkProcess(int Quantum){
     int processid=fork();
     if(processid==0){
 
-         char para=Quantum;
-         execl("process.out",&para,NULL);
+        char para=Quantum;
+        //printf("para = %d \n",Quantum);
+        execlp("./process.out", "process.out", &para, NULL);
     }
     if(processid<0){
         printf("Error while creating Scheduler");
@@ -58,32 +59,37 @@ void ForkProcess(int Quantum){
 
 
 void HPF(){
-    if(!isRunning && ReadyQueue->head!=NULL){
+    if(!isRunning && HPFReadyQueue->head!=NULL){
         isRunning=true;
-        puts("HERE in HPF\n");
-        ForkProcess(ReadyQueue->head->key.Runtime);
-        Pop(ReadyQueue);
+        //puts("HERE in HPF\n");
+        //printf("id = %d\n" , HPFReadyQueue->head->p.id );
+        ForkProcess(HPFReadyQueue->head->p.Runtime);
+        pop(HPFReadyQueue);
     }
 }
 
 int main(int argc , char*argv[]){
-    printf("ID %d\n",getpid());
+    
     signal(SIGUSR1,SignalHandlerGentorEnd);
     signal(SIGUSR2,SignalHandlerProcessesEnd);
     initClk();
 
-    ReadyQueue=CreateQueueOfProcess();
+    HPFReadyQueue=CreatePriorityQueueOfProcesses();
 
     QueueKey=msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY,0666 | IPC_CREAT);
 
     do{
         struct MsgGeneratorScheduler temp;    
-        int Rev=msgrcv(QueueKey,&temp,sizeof(temp.p),0,IPC_NOWAIT);
+        int Rev=msgrcv(QueueKey,&temp,sizeof(temp.p),0,  IPC_NOWAIT);
+        //printf("id = %d   rev = %d\n", temp.p.id , Rev);
         if(Rev!=-1){
-           Push(ReadyQueue,temp.p); 
+            //printf("i'm here \n");
+
+           push(HPFReadyQueue,temp.p); 
+           //printf("id = %d\n",HPFReadyQueue->head->p.id);
         }
         HPF();    
-    }while(Generator || ReadyQueue->head!=NULL);
+    }while( isRunning || Generator || HPFReadyQueue->head!=NULL);
     
     
     //destroyClk(true);
