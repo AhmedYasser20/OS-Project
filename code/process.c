@@ -1,7 +1,7 @@
 #include "headers.h"
 
 /* Modify this file as needed*/
-int remainingtime;
+int remainingtime;   // Time that current process will finsh using cpu
 
 int main(int agrc, char * argv[])
 {
@@ -9,10 +9,12 @@ int main(int agrc, char * argv[])
     int start =getClk();
     printf("Process here start %d\n",start);
 
-    printf("run Time= %d\n",*(argv[1]) );
+    printf("Quantum Time= %d\n",*(argv[1]) );
+
+    
 
     remainingtime=getClk()+ *(argv[1]) ;
-    printf("rem Time= %d\n",remainingtime );
+    printf("rem Time so cpu be free= %d\n",remainingtime );
 
     //TODO it needs to get the remaining time from somewhere
     //remainingtime = ??;
@@ -21,6 +23,7 @@ int main(int agrc, char * argv[])
        start=getClk();
     }
     printf("Process here end %d\n",start);
+    
     kill(getppid(),SIGUSR2);
     destroyClk(false);
     

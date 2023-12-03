@@ -10,6 +10,20 @@ struct Process
     int Priority;   //Priority of Processes
 };
 
+// Define your process stored in the pcb struct
+struct ProcessPCB 
+{
+    int TypeofRunningAlgo;
+    int remainingTime;
+    int PID;
+    int PPID;
+    int Quantum;
+    char *status;
+    int priority;
+    int waitingTime;
+    int execTime;
+};
+
 
 struct array
 {
@@ -34,6 +48,7 @@ struct Log
     int waitingT;
     
 };
+
 
 
 void makeArray(int N,struct array arr);
