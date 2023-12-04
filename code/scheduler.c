@@ -8,6 +8,20 @@ bool isRunning=false;       // Boolen used to Notify Schedular if Process is fin
 ProcessPCB * PCB_Array;
 int LastPlaceInArray;
 int processID_Now;
+int QueueProcessesKey;
+int pidnow;
+void RevAndSetMsgFormProcesses(){
+    MessageBetweenProcessAndScheduler temp;
+    msgrcv(QueueProcessesKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),0,IPC_NOWAIT);
+    PCB_Array[processID_Now].ExecTime=temp.ExceTime;
+    PCB_Array[processID_Now].RemainingTime=temp.remainingtime;
+    temp.Order=END;
+    temp.type=pidnow;
+    printf("TYPE %ld \n",temp.type);
+    msgsnd(QueueProcessesKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),IPC_NOWAIT);
+    printf("start Time = %d Finshed = %d Remining time =%d Exce Time= %d id = %d \n",PCB_Array[processID_Now].StartTime,PCB_Array[processID_Now].EndTime,PCB_Array[processID_Now].RemainingTime,PCB_Array[processID_Now].ExecTime,PCB_Array[processID_Now].P.id);
+}
+
 /*
     Function name: SignalHandlerGentorEnd(
     Description:    Signal Handler for Signal User 1 - this Signal is one way form Generator to Scheduler 
@@ -31,9 +45,7 @@ void SignalHandlerGentorEnd(int sig){
 */
 
 void SignalHandlerProcessesEnd(int sig){
-    PCB_Array[processID_Now].ExecTime=getClk();
-    PCB_Array[processID_Now].State=0;
-    PCB_Array[processID_Now].EndTime=getClk();
+    RevAndSetMsgFormProcesses();
     isRunning=false;
 }
 
@@ -45,9 +57,22 @@ void SignalHandlerProcessesEnd(int sig){
     Output: void 
 */
 
+void CreateMsgAndSend(int pid,int q){
+            MessageBetweenProcessAndScheduler temp2;
+            temp2.type=pid;
+            temp2.ExceTime=PCB_Array[processID_Now].ExecTime;
+            temp2.remainingtime=PCB_Array[processID_Now].RemainingTime;
+            temp2.Qutam=q;
+            temp2.Order=START;
+            msgsnd(QueueProcessesKey,&temp2,(sizeof(temp2.ExceTime)+sizeof(temp2.Order)+sizeof(temp2.remainingtime)+sizeof(temp2.Qutam)),IPC_NOWAIT);
+}
+
+
 
 void ForkProcess(int Quantum){
     int processid=fork();
+    CreateMsgAndSend(processid,Quantum);
+    pidnow=processid;
     if(processid==0){
         char para=Quantum;
         execlp("./process.out", "process.out", &para, NULL);
@@ -75,23 +100,26 @@ void PrintPCBArray()
 {
     for (int i = 0; i < LastPlaceInArray; i++)
     {
-        printf("start time =%f  Exec Time =%f  End time =%f  id=%d \n",PCB_Array[i].StartTime,PCB_Array[i].ExecTime,PCB_Array[i].EndTime,PCB_Array[i].P.id);
+        printf("start time =%d  Exec Time =%d  End time =%d  id=%d \n",PCB_Array[i].StartTime,PCB_Array[i].ExecTime,PCB_Array[i].EndTime,PCB_Array[i].P.id);
     }
     
 }
 
 
 int hptcount=0;
+
+
+
 void HPF(){
     if(!isRunning && HPFReadyQueue->head!=NULL){
         SetPCB_Array(HPFReadyQueue->head->p); 
         PCB_Array[hptcount].StartTime=getClk();
         PCB_Array[hptcount].State=Running;
         PCB_Array[hptcount].itsLocationInArray=hptcount;
+        processID_Now=PCB_Array[hptcount].itsLocationInArray;
         isRunning=true;
         ForkProcess(HPFReadyQueue->head->p.Runtime);
         pop(HPFReadyQueue);
-        processID_Now=PCB_Array[hptcount].itsLocationInArray;
         hptcount++;
     }
 }
@@ -102,7 +130,7 @@ int main(int argc , char*argv[]){
     signal(SIGUSR2,SignalHandlerProcessesEnd);
     PCB_Array=CreatePCB_Array();
     initClk();
-
+    QueueProcessesKey=msgget(MSG_QUEUE_SCHEDULER_PROCESS_KEY,0666 | IPC_CREAT);
     HPFReadyQueue=CreatePriorityQueueOfProcesses();
 
     QueueKey=msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY,0666 | IPC_CREAT);
@@ -116,7 +144,7 @@ int main(int argc , char*argv[]){
         }
         HPF();    
     }while( isRunning || Generator || HPFReadyQueue->head!=NULL);
-    PrintPCBArray();
+  //  PrintPCBArray();
     DestoryedPCB_Array(PCB_Array);
     //destroyClk(true);
     return 0;

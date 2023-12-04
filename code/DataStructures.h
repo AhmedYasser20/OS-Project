@@ -19,13 +19,25 @@ typedef struct ProcessPCB
 {
     struct Process P;
     int itsLocationInArray;
-    float WaitingTime;
-    float ExecTime;
-    float StartTime;
-    float RemainingTime;
-    float EndTime;
+    int WaitingTime;
+    int ExecTime;
+    int StartTime;
+    int RemainingTime;
+    int EndTime;
     StateOfProcess State;
 }ProcessPCB ;
+
+typedef enum {
+    START,WAITING,END
+}Action;
+
+typedef struct MessageBetweenProcessAndScheduler{
+    long type;
+    int remainingtime;
+    int ExceTime;
+    int Qutam;
+    Action Order;
+}MessageBetweenProcessAndScheduler;
 
 
 struct array
