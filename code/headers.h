@@ -20,7 +20,7 @@
 #include "IO_Functions.h"
 
 #include "PriorityQueue.h"
-
+#include "ArrayOfPCB.h"
 #include "PCBLinkedList.h"
 
 

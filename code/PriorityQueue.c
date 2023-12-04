@@ -37,7 +37,6 @@ void pop(PriorityQueueOfProcesses*queue)
 // Function to push according to priority 
 void push(PriorityQueueOfProcesses *queue ,struct Process pr) 
 { 
-	printf("pushing in PQ \n");
 	PriorityQueueProcessNode* start = queue->head; 
 
 	// Create new PriorityQueueProcessNode 
@@ -51,7 +50,6 @@ void push(PriorityQueueOfProcesses *queue ,struct Process pr)
 		// Insert New Node before head 
 		 
 		queue->head= temp;
-		printf("finishing pushing\n");
 		return ;
 	} 
 	else if (queue->head->p.Priority > pr.Priority) { 
@@ -72,7 +70,6 @@ void push(PriorityQueueOfProcesses *queue ,struct Process pr)
 		temp->next = start->next; 
 		start->next = temp; 
 	} 
-	printf("finishing pushing\n");
 } 
 
 

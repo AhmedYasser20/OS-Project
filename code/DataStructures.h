@@ -10,19 +10,22 @@ struct Process
     int Priority;   //Priority of Processes
 };
 
+typedef enum {
+    Running,Waiting,Blocked
+}StateOfProcess;
+
 // Define your process stored in the pcb struct
-struct ProcessPCB 
+typedef struct ProcessPCB 
 {
-    int TypeofRunningAlgo;
-    int remainingTime;
-    int PID;
-    int PPID;
-    int Quantum;
-    char *status;
-    int priority;
-    int waitingTime;
-    int execTime;
-};
+    struct Process P;
+    int itsLocationInArray;
+    float WaitingTime;
+    float ExecTime;
+    float StartTime;
+    float RemainingTime;
+    float EndTime;
+    StateOfProcess State;
+}ProcessPCB ;
 
 
 struct array
