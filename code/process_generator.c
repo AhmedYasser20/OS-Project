@@ -1,5 +1,6 @@
 #include "headers.h"
 
+char Quntam , choice;
 void clearResources(int);
 void CreateCLK();
 void CreateScheduler(char choice,char Quntam);
@@ -17,8 +18,8 @@ int main(int argc, char * argv[])
     int NumberOfProcesses=0; 
     ReadInputFile("processes.txt",ProcessesQueue,&NumberOfProcesses);
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
-    char Quntam=0;
-    char choice=ChooseAlgorithm(&Quntam);
+    Quntam='3';
+    choice=ChooseAlgorithm(&Quntam);
     // 3. Initiate and create the scheduler and clock processes.
     CreateCLK();
     CreateScheduler(choice,Quntam);
@@ -72,8 +73,7 @@ void CreateScheduler(char choice,char Quntam){
     Schedulerid=fork();
 
     if(Schedulerid==0){
-         char  paras[]={choice,Quntam};
-         execl("scheduler.out",paras,NULL);
+         execl("scheduler.out",&choice,&Quntam,NULL);
     }
     if(Schedulerid<0){
         printf("Error while creating Scheduler");

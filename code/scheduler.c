@@ -9,8 +9,11 @@ ProcessPCB * PCB_Array;
 int LastPlaceInArray;
 int processID_Now;
 int QueueProcessesKey;
+struct Queue *RRreadyQ;
 int pidnow;
-int hptcount=0;
+int TempCount=0;
+int Quantum;
+int Algo;
 
 void RevAndSetMsgFormProcesses(){
     MessageBetweenProcessAndScheduler temp;
@@ -18,7 +21,13 @@ void RevAndSetMsgFormProcesses(){
     PCB_Array[processID_Now].ExecTime=temp.ExceTime;
     PCB_Array[processID_Now].RemainingTime=temp.remainingtime;
     PCB_Array[processID_Now].EndTime=getClk();
-    temp.Order=END;
+    if(temp.remainingtime<=0){
+            if(Algo==3){Pop(RRreadyQ);}
+           temp.Order = END;
+        }
+    else{
+        temp.Order= WAITING;
+    }    
     temp.type=pidnow;
     msgsnd(QueueProcessesKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),IPC_NOWAIT);
 }
@@ -112,22 +121,48 @@ void PrintPCBArray()
 
 
 void HPF(){
+
+    /*
+    
+    
+    
+        CHANGE PROCESS END its Self
+    
+    
+    
+    */
+
+
+
     if(!isRunning && HPFReadyQueue->head!=NULL){
         SetPCB_Array(HPFReadyQueue->head->p); 
-        PCB_Array[hptcount].StartTime=getClk();
-        PCB_Array[hptcount].State=Running;
-        PCB_Array[hptcount].itsLocationInArray=hptcount;
-        processID_Now=PCB_Array[hptcount].itsLocationInArray;
+        PCB_Array[TempCount].StartTime=getClk();
+        PCB_Array[TempCount].State=Running;
+        PCB_Array[TempCount].itsLocationInArray=TempCount;
+        processID_Now=PCB_Array[TempCount].itsLocationInArray;
         isRunning=true;
         ForkProcess(HPFReadyQueue->head->p.Runtime);
         pop(HPFReadyQueue);
-        hptcount++;
+        TempCount++;
     }
 }
 
+void RoundRobin(){
+    if (!isRunning && RRreadyQ->head != NULL)
+    {
+        
+        ForkProcess(Quantum);
+        Push(RRreadyQ,RRreadyQ->head->key);
+        Pop(RRreadyQ);
+    }
+}
+
+
 int main(int argc , char*argv[]){
     initClk();
-    
+    Quantum = (*(argv[1]))-'0';
+    Algo=(*(argv[0]))-'0';
+       
     signal(SIGUSR1,SignalHandlerGentorEnd);
     signal(SIGUSR2,SignalHandlerProcessesEnd);
     PCB_Array=CreatePCB_Array();
@@ -139,10 +174,28 @@ int main(int argc , char*argv[]){
     do{
         struct MsgGeneratorScheduler temp;    
         int Rev=msgrcv(QueueKey,&temp,sizeof(temp.p),0,  IPC_NOWAIT);
-        if(Rev!=-1){
-           push(HPFReadyQueue,temp.p);
+        if (Rev != -1)
+        {
+            if (Algo == 1)
+            {
+                push(HPFReadyQueue, temp.p);
+            }
+            else if (Algo == 3)
+            {  
+               Push(RRreadyQ,temp.p);
+               SetPCB_Array(RRreadyQ->head->key);
+               PCB_Array[TempCount].itsLocationInArray=TempCount;
+               TempCount++;
+            }
         }
-        HPF();    
+        if (Algo == 1)
+        {
+            HPF();
+        }
+        else if (Algo == 3)
+        {
+            RoundRobin();
+        }  
     }while( isRunning || Generator || HPFReadyQueue->head!=NULL);
     PrintPCBArray();
     DestoryedPCB_Array(PCB_Array);

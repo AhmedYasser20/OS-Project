@@ -13,9 +13,12 @@ char ChooseAlgorithm(char *Quntam){
     printf("3-Round Robin (RR)\n");
     printf("Enter Your Choice: ");
     scanf("%c",&choice);
-    if(choice==3){
+    
+    if(choice=='3'){
         printf("Please Quntam of Round Robin: ");
-        scanf("%c",Quntam);
+        
+        scanf(" %c",Quntam);
+      
     }
     } while(choice!='1' && choice!='2' && choice!='3');
     return choice;

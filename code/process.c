@@ -13,7 +13,7 @@ int main(int agrc, char * argv[])
     int pid=getpid();
     MessageBetweenProcessAndScheduler temp;
     int rev=msgrcv(QueueKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),pid,!IPC_NOWAIT);  
-    
+
     do{
         if(temp.Order==START){
            int clktemp=getClk();
