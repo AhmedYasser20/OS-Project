@@ -4,7 +4,9 @@ void clearResources(int);
 void CreateCLK();
 void CreateScheduler(char choice,char Quntam);
 int Schedulerid;
- int QueueKey;
+int QueueKey;
+
+
 int main(int argc, char * argv[])
 {
     signal(SIGINT, clearResources);
@@ -39,10 +41,8 @@ int main(int argc, char * argv[])
             Pop(ProcessesQueue);
         }
     }
-    printf("IDHere %d\n",Schedulerid);
     kill(Schedulerid,SIGUSR1);
     int status;
-    printf("I am Waiting\n");
     waitpid(Schedulerid,&status,0);
     // 6. Send the information to the scheduler at the appropriate time.
     // 7. Clear clock resources

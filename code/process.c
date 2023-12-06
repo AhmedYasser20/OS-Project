@@ -13,7 +13,7 @@ int main(int agrc, char * argv[])
     int pid=getpid();
     MessageBetweenProcessAndScheduler temp;
     int rev=msgrcv(QueueKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),pid,!IPC_NOWAIT);  
-    printf("%d \n" ,temp.Qutam);  
+    
     do{
         if(temp.Order==START){
            int clktemp=getClk();
@@ -35,7 +35,6 @@ int main(int agrc, char * argv[])
             temp2.ExceTime=temp.ExceTime;
             temp2.remainingtime=temp.remainingtime;
             temp2.Qutam=-1;
-            printf("child %d \n",temp2.type);
             msgsnd(QueueKey,&temp2,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),!IPC_NOWAIT);
             kill(getppid(),SIGUSR2);
         }

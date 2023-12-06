@@ -10,18 +10,17 @@ int LastPlaceInArray;
 int processID_Now;
 int QueueProcessesKey;
 int pidnow;
-
+int hptcount=0;
 
 void RevAndSetMsgFormProcesses(){
     MessageBetweenProcessAndScheduler temp;
     msgrcv(QueueProcessesKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),0,IPC_NOWAIT);
     PCB_Array[processID_Now].ExecTime=temp.ExceTime;
     PCB_Array[processID_Now].RemainingTime=temp.remainingtime;
+    PCB_Array[processID_Now].EndTime=getClk();
     temp.Order=END;
     temp.type=pidnow;
-    printf("TYPE %ld \n",temp.type);
     msgsnd(QueueProcessesKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),IPC_NOWAIT);
-    printf("start Time = %d  Remining time =%d Exce Time= %d id = %d \n",PCB_Array[processID_Now].StartTime,PCB_Array[processID_Now].RemainingTime,PCB_Array[processID_Now].ExecTime,PCB_Array[processID_Now].P.id);
 }
 
 /*
@@ -108,7 +107,7 @@ void PrintPCBArray()
 }
 
 
-int hptcount=0;
+
 
 
 
@@ -127,14 +126,14 @@ void HPF(){
 }
 
 int main(int argc , char*argv[]){
+    initClk();
     
     signal(SIGUSR1,SignalHandlerGentorEnd);
     signal(SIGUSR2,SignalHandlerProcessesEnd);
     PCB_Array=CreatePCB_Array();
-    initClk();
+   
     QueueProcessesKey=msgget(MSG_QUEUE_SCHEDULER_PROCESS_KEY,0666 | IPC_CREAT);
     HPFReadyQueue=CreatePriorityQueueOfProcesses();
-
     QueueKey=msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY,0666 | IPC_CREAT);
 
     do{
@@ -142,13 +141,12 @@ int main(int argc , char*argv[]){
         int Rev=msgrcv(QueueKey,&temp,sizeof(temp.p),0,  IPC_NOWAIT);
         if(Rev!=-1){
            push(HPFReadyQueue,temp.p);
-         
         }
         HPF();    
     }while( isRunning || Generator || HPFReadyQueue->head!=NULL);
-  //  PrintPCBArray();
+    PrintPCBArray();
     DestoryedPCB_Array(PCB_Array);
     msgctl(QueueProcessesKey,IPC_RMID,(struct msqid_ds *)0);
-    //destroyClk(true);
+    destroyClk(true);
     return 0;
 }
