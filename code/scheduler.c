@@ -22,7 +22,10 @@ void RevAndSetMsgFormProcesses(){
     PCB_Array[processID_Now].RemainingTime=temp.remainingtime;
     PCB_Array[processID_Now].EndTime=getClk();
     if(temp.remainingtime<=0){
-            if(Algo==3){Pop(RRreadyQ);}
+
+          if(Algo==3){
+            puts("END");
+            Pop(RRreadyQ);}
            temp.Order = END;
         }
     else{
@@ -147,10 +150,25 @@ void HPF(){
     }
 }
 
+int SearchInPCBArray(int id){
+    for (int i = 0; i < TempCount; i++)
+    {
+        if(PCB_Array[i].P.id==id){
+            return PCB_Array[i].itsLocationInArray;
+        }
+    }
+    return -1;
+}
+
 void RoundRobin(){
     if (!isRunning && RRreadyQ->head != NULL)
     {
-        
+        processID_Now= SearchInPCBArray(RRreadyQ->head->key.id);
+        if(processID_Now==-1){
+            puts("HEREEEEE ERRROR");
+         
+        }
+        isRunning = true;
         ForkProcess(Quantum);
         Push(RRreadyQ,RRreadyQ->head->key);
         Pop(RRreadyQ);
@@ -169,6 +187,9 @@ int main(int argc , char*argv[]){
    
     QueueProcessesKey=msgget(MSG_QUEUE_SCHEDULER_PROCESS_KEY,0666 | IPC_CREAT);
     HPFReadyQueue=CreatePriorityQueueOfProcesses();
+    RRreadyQ = CreateQueueOfProcess();
+   
+
     QueueKey=msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY,0666 | IPC_CREAT);
 
     do{
@@ -176,6 +197,7 @@ int main(int argc , char*argv[]){
         int Rev=msgrcv(QueueKey,&temp,sizeof(temp.p),0,  IPC_NOWAIT);
         if (Rev != -1)
         {
+            
             if (Algo == 1)
             {
                 push(HPFReadyQueue, temp.p);
@@ -186,6 +208,7 @@ int main(int argc , char*argv[]){
                SetPCB_Array(RRreadyQ->head->key);
                PCB_Array[TempCount].itsLocationInArray=TempCount;
                TempCount++;
+               printf("%d \n",temp.p.id);
             }
         }
         if (Algo == 1)
@@ -194,9 +217,9 @@ int main(int argc , char*argv[]){
         }
         else if (Algo == 3)
         {
-            RoundRobin();
+           RoundRobin();
         }  
-    }while( isRunning || Generator || HPFReadyQueue->head!=NULL);
+    }while( isRunning || Generator || HPFReadyQueue->head!=NULL || RRreadyQ->head!=NULL);
     PrintPCBArray();
     DestoryedPCB_Array(PCB_Array);
     msgctl(QueueProcessesKey,IPC_RMID,(struct msqid_ds *)0);
