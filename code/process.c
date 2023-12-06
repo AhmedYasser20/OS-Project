@@ -12,31 +12,30 @@ int main(int agrc, char * argv[])
     int QueueKey=msgget(MSG_QUEUE_SCHEDULER_PROCESS_KEY,0666 | IPC_CREAT);
     int pid=getpid();
     MessageBetweenProcessAndScheduler temp;
-    int rev=msgrcv(QueueKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),pid,!IPC_NOWAIT);
-    printf("PID %d \n",pid);
-    
+    int rev=msgrcv(QueueKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),pid,!IPC_NOWAIT);  
+    printf("%d \n" ,temp.Qutam);  
     do{
         if(temp.Order==START){
-           puts("122\n"); 
            int clktemp=getClk();
            temp.remainingtime--;
            temp.ExceTime++;
            temp.Qutam--;
            while(clktemp==getClk());   
         }
-        rev=msgrcv(QueueKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)),pid,IPC_NOWAIT);
+        rev=msgrcv(QueueKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),pid,IPC_NOWAIT);
         if(rev!=-1){
-           
             if(temp.Order==END){
+                
                 break;
             }
         }
-        if(temp.Qutam==0){
+        if(temp.Qutam<=0){
             MessageBetweenProcessAndScheduler temp2;
             temp2.type=pid;
             temp2.ExceTime=temp.ExceTime;
             temp2.remainingtime=temp.remainingtime;
             temp2.Qutam=-1;
+            printf("child %d \n",temp2.type);
             msgsnd(QueueKey,&temp2,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),!IPC_NOWAIT);
             kill(getppid(),SIGUSR2);
         }

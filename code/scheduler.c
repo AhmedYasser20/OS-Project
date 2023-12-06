@@ -10,6 +10,8 @@ int LastPlaceInArray;
 int processID_Now;
 int QueueProcessesKey;
 int pidnow;
+
+
 void RevAndSetMsgFormProcesses(){
     MessageBetweenProcessAndScheduler temp;
     msgrcv(QueueProcessesKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),0,IPC_NOWAIT);
@@ -19,7 +21,7 @@ void RevAndSetMsgFormProcesses(){
     temp.type=pidnow;
     printf("TYPE %ld \n",temp.type);
     msgsnd(QueueProcessesKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),IPC_NOWAIT);
-    printf("start Time = %d Finshed = %d Remining time =%d Exce Time= %d id = %d \n",PCB_Array[processID_Now].StartTime,PCB_Array[processID_Now].EndTime,PCB_Array[processID_Now].RemainingTime,PCB_Array[processID_Now].ExecTime,PCB_Array[processID_Now].P.id);
+    printf("start Time = %d  Remining time =%d Exce Time= %d id = %d \n",PCB_Array[processID_Now].StartTime,PCB_Array[processID_Now].RemainingTime,PCB_Array[processID_Now].ExecTime,PCB_Array[processID_Now].P.id);
 }
 
 /*
@@ -146,6 +148,7 @@ int main(int argc , char*argv[]){
     }while( isRunning || Generator || HPFReadyQueue->head!=NULL);
   //  PrintPCBArray();
     DestoryedPCB_Array(PCB_Array);
+    msgctl(QueueProcessesKey,IPC_RMID,(struct msqid_ds *)0);
     //destroyClk(true);
     return 0;
 }
