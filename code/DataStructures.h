@@ -11,7 +11,7 @@ struct Process
 };
 
 typedef enum {
-    Running,Waiting,Blocked
+    RUNNING,WAITING,ENDED,READY
 }StateOfProcess;
 
 // Define your process stored in the pcb struct
@@ -24,11 +24,12 @@ typedef struct ProcessPCB
     int StartTime;
     int RemainingTime;
     int EndTime;
+    int pid;
     StateOfProcess State;
 }ProcessPCB ;
 
 typedef enum {
-    START,WAITING,END
+    START,WAIT,END
 }Action;
 
 typedef struct MessageBetweenProcessAndScheduler{

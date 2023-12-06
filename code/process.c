@@ -13,7 +13,7 @@ int main(int agrc, char * argv[])
     int pid=getpid();
     MessageBetweenProcessAndScheduler temp;
     int rev=msgrcv(QueueKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),pid,!IPC_NOWAIT);  
-
+    printf(" I AM PROCESS %d ORDER = %d QUM= %d Rem Time =%d Exce Time=%d TYPE = %d \n ",pid,temp.Order,temp.Qutam,temp.remainingtime,temp.ExceTime,temp.type);
     do{
         if(temp.Order==START){
            int clktemp=getClk();
@@ -29,14 +29,17 @@ int main(int agrc, char * argv[])
                 break;
             }
         }
-        if(temp.Qutam<=0){
+        if(temp.Qutam<=0 && temp.Order!=2){
             MessageBetweenProcessAndScheduler temp2;
             temp2.type=pid;
             temp2.ExceTime=temp.ExceTime;
             temp2.remainingtime=temp.remainingtime;
             temp2.Qutam=-1;
             msgsnd(QueueKey,&temp2,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),!IPC_NOWAIT);
+             printf(" I AM PROCESS %d ORDER = %d QUM= %d Rem Time =%d Exce Time=%d TYPE = %d \n ",pid,temp2.Order,temp2.Qutam,temp2.remainingtime,temp2.ExceTime,temp2.type);
             kill(getppid(),SIGUSR2);
+            msgrcv(QueueKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),pid,!IPC_NOWAIT);
+            printf(" RES1 =I AM PROCESS %d ORDER = %d QUM= %d Rem Time =%d Exce Time=%d TYPE = %d \n ",pid,temp.Order,temp.Qutam,temp.remainingtime,temp.ExceTime,temp.type);
         }
 
     }while(true);
