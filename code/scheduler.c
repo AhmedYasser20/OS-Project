@@ -8,19 +8,37 @@ bool isRunning=false;       // Boolen used to Notify Schedular if Process is fin
 ProcessPCB * PCB_Array;
 int LastPlaceInArray;
 int processID_Now;
-int QueueProcessesKey;
+int QueueProcessesKey;      //From Processes to Scheduler 
+int QueueProcessesKey2;      //From Scheduler to processes 
 int pidnow;
-int hptcount=0;
+int TempCount=0;
+int Quantum;
+int Algo;
+struct Queue *RRreadyQ;
+
+
 
 void RevAndSetMsgFormProcesses(){
+    puts("HERE");
     MessageBetweenProcessAndScheduler temp;
-    msgrcv(QueueProcessesKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),0,IPC_NOWAIT);
+
+    msgrcv(QueueProcessesKey2,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),0,IPC_NOWAIT);
+    printf("What i Rev As Sch type %ld,Remtime=%d,ExceTime=%d,Qutm=%d,ORDER=%d \n",temp.type,temp.remainingtime,temp.ExceTime,temp.Qutam,temp.Order);
     PCB_Array[processID_Now].ExecTime=temp.ExceTime;
     PCB_Array[processID_Now].RemainingTime=temp.remainingtime;
     PCB_Array[processID_Now].EndTime=getClk();
-    temp.Order=END;
-    temp.type=pidnow;
+    if(temp.remainingtime<=0){
+        temp.Order=END;
+        PCB_Array[processID_Now].State=End;
+    }
+    else{
+        puts("WAITTTTT");
+    temp.Order=WAIT;
+    PCB_Array[processID_Now].State=Waitting;
+    }
+    temp.type=PCB_Array[processID_Now].Pid;
     msgsnd(QueueProcessesKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),IPC_NOWAIT);
+    printf("What i send As Sch type %ld,Remtime=%d,ExceTime=%d,Qutm=%d,ORDER=%d \n",temp.type,temp.remainingtime,temp.ExceTime,temp.Qutam,temp.Order);
 }
 
 /*
@@ -48,6 +66,7 @@ void SignalHandlerGentorEnd(int sig){
 void SignalHandlerProcessesEnd(int sig){
     RevAndSetMsgFormProcesses();
     isRunning=false;
+
 }
 
 /*
@@ -59,13 +78,15 @@ void SignalHandlerProcessesEnd(int sig){
 */
 
 void CreateMsgAndSend(int pid,int q){
-            MessageBetweenProcessAndScheduler temp2;
-            temp2.type=pid;
-            temp2.ExceTime=PCB_Array[processID_Now].ExecTime;
-            temp2.remainingtime=PCB_Array[processID_Now].RemainingTime;
-            temp2.Qutam=q;
-            temp2.Order=START;
-            msgsnd(QueueProcessesKey,&temp2,(sizeof(temp2.ExceTime)+sizeof(temp2.Order)+sizeof(temp2.remainingtime)+sizeof(temp2.Qutam)),IPC_NOWAIT);
+        MessageBetweenProcessAndScheduler temp2;
+        
+        temp2.type=pid;
+        temp2.ExceTime=PCB_Array[processID_Now].ExecTime;
+        temp2.remainingtime=PCB_Array[processID_Now].RemainingTime;
+        temp2.Qutam=q;
+        temp2.Order=START;
+
+        msgsnd(QueueProcessesKey,&temp2,(sizeof(temp2.ExceTime)+sizeof(temp2.Order)+sizeof(temp2.remainingtime)+sizeof(temp2.Qutam)),IPC_NOWAIT);
 }
 
 
@@ -73,7 +94,7 @@ void CreateMsgAndSend(int pid,int q){
 void ForkProcess(int Quantum){
     int processid=fork();
     CreateMsgAndSend(processid,Quantum);
-    pidnow=processid;
+    PCB_Array[processID_Now].Pid=processid;
     if(processid==0){
         char para=Quantum;
         execlp("./process.out", "process.out", &para, NULL);
@@ -86,14 +107,20 @@ void ForkProcess(int Quantum){
 
 void SetPCB_Array(struct Process p){
     ProcessPCB temp;
+   
+   
     temp.P=p;
     temp.itsLocationInArray=LastPlaceInArray;
+    temp.StartTime=0;
+    temp.EndTime=0;
     temp.RemainingTime=p.Runtime;
-    temp.State=Waiting;
+    temp.State=Ready;
     temp.ExecTime=0;
     temp.WaitingTime=0;
+    temp.Pid=-1;
+   
+   
     PCB_Array[LastPlaceInArray]=temp;
-    PCB_Array[LastPlaceInArray].itsLocationInArray=LastPlaceInArray;
     LastPlaceInArray++;
 }
 
@@ -101,7 +128,9 @@ void PrintPCBArray()
 {
     for (int i = 0; i < LastPlaceInArray; i++)
     {
+        printf("process id %d Arrive Time %d Runtime %d Priority %d \n",PCB_Array[i].P.id,PCB_Array[i].P.ArriveTime,PCB_Array[i].P.Runtime,PCB_Array[i].P.Priority);
         printf("start time =%d  Exec Time =%d  End time =%d  id=%d \n",PCB_Array[i].StartTime,PCB_Array[i].ExecTime,PCB_Array[i].EndTime,PCB_Array[i].P.id);
+        printf("ITSLoc %d , PID %d , STATE %d\n",PCB_Array[i].itsLocationInArray,PCB_Array[i].Pid,PCB_Array[i].State);
     }
     
 }
@@ -114,39 +143,110 @@ void PrintPCBArray()
 void HPF(){
     if(!isRunning && HPFReadyQueue->head!=NULL){
         SetPCB_Array(HPFReadyQueue->head->p); 
-        PCB_Array[hptcount].StartTime=getClk();
-        PCB_Array[hptcount].State=Running;
-        PCB_Array[hptcount].itsLocationInArray=hptcount;
-        processID_Now=PCB_Array[hptcount].itsLocationInArray;
+        PCB_Array[TempCount].StartTime=getClk();
+        PCB_Array[TempCount].State=Running;
+        PCB_Array[TempCount].itsLocationInArray=TempCount;
+        processID_Now=PCB_Array[TempCount].itsLocationInArray;
         isRunning=true;
         ForkProcess(HPFReadyQueue->head->p.Runtime);
         pop(HPFReadyQueue);
-        hptcount++;
+        TempCount++;
     }
 }
 
+int SearchInPCBArray(int id){
+    for (int i = 0; i < LastPlaceInArray; i++)
+    {
+        if(PCB_Array[i].P.id==id){
+            return PCB_Array[i].itsLocationInArray;
+        }
+    }
+    return -1;
+}
+
+void PrintQueue(){
+    for (int i = 0; i < LastPlaceInArray; i++)
+    {
+        Push(RRreadyQ,RRreadyQ->head->key);
+        printf("id in q %d",RRreadyQ->head->key.id);
+        Pop(RRreadyQ);
+    }
+    
+}
+
+void RoundRobin(){
+    if(!isRunning && RRreadyQ->head!=NULL){
+        isRunning=true;
+        processID_Now=SearchInPCBArray(RRreadyQ->head->key.id);
+        if(PCB_Array[processID_Now].State==Ready){
+            PCB_Array[processID_Now].State=Running;
+            ForkProcess(Quantum);
+        }
+        else if(PCB_Array[processID_Now].State==Waitting){
+           PCB_Array[processID_Now].State=Running;
+           CreateMsgAndSend(PCB_Array[processID_Now].Pid,Quantum);
+        }
+        else if(PCB_Array[processID_Now].State==End){
+            //POP 
+            puts("poped");
+            Pop(RRreadyQ);
+            return;
+        }
+        Push(RRreadyQ,RRreadyQ->head->key);
+        PrintQueue();
+    }
+
+}
+
+
+
+
+
 int main(int argc , char*argv[]){
     initClk();
-    
+    Quantum = (*(argv[1]))-'0';
+    Algo=(*(argv[0]))-'0';
+    printf("Algo =%d Q =%d \n",Algo,Quantum);
     signal(SIGUSR1,SignalHandlerGentorEnd);
     signal(SIGUSR2,SignalHandlerProcessesEnd);
     PCB_Array=CreatePCB_Array();
    
-    QueueProcessesKey=msgget(MSG_QUEUE_SCHEDULER_PROCESS_KEY,0666 | IPC_CREAT);
+    QueueProcessesKey=msgget(MSG_QUEUE_FROM_SCHEDULER_TO_PROCESS_KEY,0666 | IPC_CREAT);
+    QueueProcessesKey2=msgget(MSG_QUEUE_FROM_PROCESS_TO_SCHEDULER_KEY,0666 | IPC_CREAT);
+    
     HPFReadyQueue=CreatePriorityQueueOfProcesses();
+    RRreadyQ=CreateQueueOfProcess();
+    
     QueueKey=msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY,0666 | IPC_CREAT);
+
 
     do{
         struct MsgGeneratorScheduler temp;    
         int Rev=msgrcv(QueueKey,&temp,sizeof(temp.p),0,  IPC_NOWAIT);
         if(Rev!=-1){
-           push(HPFReadyQueue,temp.p);
+            if(Algo==1){
+                push(HPFReadyQueue,temp.p);
+            }
+            else{
+                Push(RRreadyQ,temp.p);
+                SetPCB_Array(temp.p);
+                // puts("*************************");
+                // PrintPCBArray();
+                // puts("*************************");
+            }
         }
-        HPF();    
-    }while( isRunning || Generator || HPFReadyQueue->head!=NULL);
+        if(Algo==1){
+            HPF();
+        }
+        else if(Algo==3){
+           RoundRobin();
+        }
+            
+    }while( isRunning || Generator || HPFReadyQueue->head!=NULL || RRreadyQ->head!=NULL);
     PrintPCBArray();
     DestoryedPCB_Array(PCB_Array);
     msgctl(QueueProcessesKey,IPC_RMID,(struct msqid_ds *)0);
+    msgctl(QueueProcessesKey2,IPC_RMID,(struct msqid_ds *)0);
     destroyClk(true);
     return 0;
 }

@@ -32,8 +32,8 @@ typedef short bool;
 
 #define MSG_QUEUE_GENERATOR_SCHEDULER_KEY 254
 
-#define MSG_QUEUE_SCHEDULER_PROCESS_KEY 20
-
+#define MSG_QUEUE_FROM_SCHEDULER_TO_PROCESS_KEY 20
+#define MSG_QUEUE_FROM_PROCESS_TO_SCHEDULER_KEY 22
 struct MsgGeneratorScheduler {
     long type;
     struct Process p;
