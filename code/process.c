@@ -28,21 +28,20 @@ int main(int agrc, char * argv[])
            while(clktemp==getClk());   
         }
         if(temp.Order==END){
-            puts("END");
             break;
         }
-        if(temp.Qutam==0 && temp.Order==START){
+        if((temp.remainingtime==0||temp.Qutam==0) && temp.Order==START){
             MessageBetweenProcessAndScheduler temp2;
             temp2.type=pid;
             temp2.ExceTime=temp.ExceTime;
             temp2.remainingtime=temp.remainingtime;
             temp2.Qutam=-1;
             msgsnd(QueueKey2,&temp2,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),!IPC_NOWAIT);
-            printf("What i sned As process type %ld,Remtime=%d,ExceTime=%d,Qutm=%d,ORDER=%d \n",temp2.type,temp2.remainingtime,temp2.ExceTime,temp2.Qutam,temp2.Order);
+          //  printf("What i sned As process type %ld,Remtime=%d,ExceTime=%d,Qutm=%d,ORDER=%d \n",temp2.type,temp2.remainingtime,temp2.ExceTime,temp2.Qutam,temp2.Order);
             kill(getppid(),SIGUSR2);
             //temp.Order=END;
             msgrcv(QueueKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),pid,!IPC_NOWAIT);
-            printf("What i Rev As process type %ld,Remtime=%d,ExceTime=%d,Qutm=%d,ORDER=%d \n",temp.type,temp.remainingtime,temp.ExceTime,temp.Qutam,temp.Order);
+           // printf("What i Rev As process type %ld,Remtime=%d,ExceTime=%d,Qutm=%d,ORDER=%d \n",temp.type,temp.remainingtime,temp.ExceTime,temp.Qutam,temp.Order);
         }
 
     }while(true);

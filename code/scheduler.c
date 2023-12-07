@@ -19,11 +19,11 @@ struct Queue *RRreadyQ;
 
 
 void RevAndSetMsgFormProcesses(){
-    puts("HERE");
+    //puts("HERE");
     MessageBetweenProcessAndScheduler temp;
 
     msgrcv(QueueProcessesKey2,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),0,IPC_NOWAIT);
-    printf("What i Rev As Sch type %ld,Remtime=%d,ExceTime=%d,Qutm=%d,ORDER=%d \n",temp.type,temp.remainingtime,temp.ExceTime,temp.Qutam,temp.Order);
+    //printf("What i Rev As Sch type %ld,Remtime=%d,ExceTime=%d,Qutm=%d,ORDER=%d \n",temp.type,temp.remainingtime,temp.ExceTime,temp.Qutam,temp.Order);
     PCB_Array[processID_Now].ExecTime=temp.ExceTime;
     PCB_Array[processID_Now].RemainingTime=temp.remainingtime;
     PCB_Array[processID_Now].EndTime=getClk();
@@ -32,13 +32,12 @@ void RevAndSetMsgFormProcesses(){
         PCB_Array[processID_Now].State=End;
     }
     else{
-        puts("WAITTTTT");
     temp.Order=WAIT;
     PCB_Array[processID_Now].State=Waitting;
     }
     temp.type=PCB_Array[processID_Now].Pid;
     msgsnd(QueueProcessesKey,&temp,(sizeof(temp.ExceTime)+sizeof(temp.Order)+sizeof(temp.remainingtime)+sizeof(temp.Qutam)),IPC_NOWAIT);
-    printf("What i send As Sch type %ld,Remtime=%d,ExceTime=%d,Qutm=%d,ORDER=%d \n",temp.type,temp.remainingtime,temp.ExceTime,temp.Qutam,temp.Order);
+    //printf("What i send As Sch type %ld,Remtime=%d,ExceTime=%d,Qutm=%d,ORDER=%d \n",temp.type,temp.remainingtime,temp.ExceTime,temp.Qutam,temp.Order);
 }
 
 /*
@@ -176,9 +175,11 @@ void PrintQueue(){
 
 void RoundRobin(){
     if(!isRunning && RRreadyQ->head!=NULL){
+
         isRunning=true;
         processID_Now=SearchInPCBArray(RRreadyQ->head->key.id);
         if(PCB_Array[processID_Now].State==Ready){
+            PCB_Array[processID_Now].StartTime=getClk();
             PCB_Array[processID_Now].State=Running;
             ForkProcess(Quantum);
         }
@@ -188,12 +189,12 @@ void RoundRobin(){
         }
         else if(PCB_Array[processID_Now].State==End){
             //POP 
-            puts("poped");
             Pop(RRreadyQ);
+            isRunning=false;
             return;
         }
         Push(RRreadyQ,RRreadyQ->head->key);
-        PrintQueue();
+        Pop(RRreadyQ);
     }
 
 }
@@ -224,6 +225,8 @@ int main(int argc , char*argv[]){
         struct MsgGeneratorScheduler temp;    
         int Rev=msgrcv(QueueKey,&temp,sizeof(temp.p),0,  IPC_NOWAIT);
         if(Rev!=-1){
+           
+           
             if(Algo==1){
                 push(HPFReadyQueue,temp.p);
             }
@@ -239,6 +242,7 @@ int main(int argc , char*argv[]){
             HPF();
         }
         else if(Algo==3){
+        
            RoundRobin();
         }
             
