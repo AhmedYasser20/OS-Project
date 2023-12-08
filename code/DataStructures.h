@@ -40,7 +40,6 @@ typedef struct MessageBetweenProcessAndScheduler{
     Action Order;
 }MessageBetweenProcessAndScheduler;
 
-
 struct array
 {
     int size;
