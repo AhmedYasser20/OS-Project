@@ -1,7 +1,7 @@
 #include "headers.h"
 
 /* Modify this file as needed*/
-int remainingtime; // Time that current process will finsh using cpu
+int remQunatum; // Time that current process will finsh using cpu
 int I_getWait = 0;
 int ALG = -1;
 #define REDY 10
@@ -12,30 +12,63 @@ int main(int agrc, char *argv[])
 {
     initClk();
     int start = getClk();
-    remainingtime = getClk() + *(argv[1]);
-    ALG = *(argv[2]);
+    int tempstart=start;
+    int Quantum;    // Time slot of RR 
+    if (agrc ==3)
+    {
+        // then you are round robin and you have recived Quatum and remaining time of the process
+         remQunatum =  * (argv[1] );    // HPF  ,SJT   actuall rem time for the process to be terminated
+         //RR  to current stop if rem 
+         Quantum=* (argv[2] );     
+    }
+    else 
+    {
+         // then you are HPF or srtn and you have recived  remaining time of the process
+          remQunatum =  * (argv[1]);
+
+    }
+   
+
     signal(SIGUSR2, SignalHandlerProcessesStop);
     signal(SIGUSR1, SignalHandlerProcessesCont);
+
+   
     int pid = getpid();
-    if (ALG == 2)
-    {
-        do{
-            
-        if (I_getWait)
+
+     //MessageBetweenProcessAndScheduler temp;
+    // int QueueKey = msgget(MSG_QUEUE_FROM_SCHEDULER_TO_PROCESS_KEY, 0666 | IPC_CREAT);  // sch -> P
+
+
+    // msgrcv(QueueKey, &temp, (sizeof(temp.ExceTime) + sizeof(temp.Order) + sizeof(temp.remainingtime) + sizeof(temp.Qutam)), pid, IPC_NOWAIT);
+
+        // HPF (revived rem time) finsh when  rem =0
+        //SRT  (revived rem time) finsh when  (rem =0 or (interputed and process sleep ) )
+        // RR (Quantum ) finsh when  (Q =0 and sleep or (rem = 0 and end) )
+
+       
+        do
         {
-            raise(SIGSTOP);
-        }
-        else
-        {
-            raise(SIGCONT);
-        }
+            if (tempstart != getClk()) // check if there is clock happened 
+            {
+              
+                    if (!I_getWait && (getClk()-tempstart==1 ) )
+                    {
+                        raise(SIGCONT);
+                        remQunatum--;
+                        tempstart=getClk();
+                    }
+                    else if (I_getWait)
+                    {
+                       raise(SIGSTOP);
+                    }
+                
+            }
         }while(status !=30); // if status != ENND
-    }
+
     /*
     else if (ALG == 3)
     {
 
-        int QueueKey = msgget(MSG_QUEUE_FROM_SCHEDULER_TO_PROCESS_KEY, 0666 | IPC_CREAT);  // sch -> P
         int QueueKey2 = msgget(MSG_QUEUE_FROM_PROCESS_TO_SCHEDULER_KEY, 0666 | IPC_CREAT); // P -> sch
 
         MessageBetweenProcessAndScheduler temp;
@@ -43,7 +76,6 @@ int main(int agrc, char *argv[])
 
         do
         {
-            msgrcv(QueueKey, &temp, (sizeof(temp.ExceTime) + sizeof(temp.Order) + sizeof(temp.remainingtime) + sizeof(temp.Qutam)), pid, IPC_NOWAIT);
 
             if (I_getWait)
             {
@@ -74,7 +106,6 @@ int main(int agrc, char *argv[])
             }
             if ((temp.remainingtime == 0 || temp.Qutam == 0) && temp.Order == START)
             {
-                MessageBetweenProcessAndScheduler temp2;
                 temp2.type = pid;
                 temp2.ExceTime = temp.ExceTime;
                 temp2.remainingtime = temp.remainingtime;
@@ -104,7 +135,7 @@ int main(int agrc, char *argv[])
 
 void SignalHandlerProcessesStop(int sig)
 {
-    I_getWait = 1;
+    I_getWait = 1; // if 0 your waiting
 }
 
 /*
@@ -117,5 +148,5 @@ void SignalHandlerProcessesStop(int sig)
 
 void SignalHandlerProcessesCont(int sig)
 {
-    I_getWait = 0;
+    I_getWait = 0;   // if 0 your running
 }
