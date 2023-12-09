@@ -25,6 +25,7 @@ typedef struct ProcessPCB
     int RemainingTime;
     int EndTime;
     int Pid;
+
     StateOfProcess State;
 }ProcessPCB ;
 

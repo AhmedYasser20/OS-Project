@@ -6,14 +6,19 @@ bool Generator = true;                          // Boolen used to Notify if Gene
 bool isRunning = false;                         // Boolen used to Notify Schedular if Process is finshed or not
 ProcessPCB *PCB_Array;
 int LastPlaceInArray;
-int processID_Now;
-int QueueProcessesKey;  // From Processes to Scheduler
-int QueueProcessesKey2; // From Scheduler to processes
+int processID_Now;  
+int processID_Min_RT;
+int Processid_run_now = -1;     // Processid_run_now 
+int Rem_CurrentP =0;
+int Start_processing_time;
+int QueueProcessesKey;         // From Processes to Scheduler
+int QueueProcessesKey2;       // From Scheduler to processes
 int pidnow;
 int TempCount = 0;
 int Quantum;
 int Algo;
 struct Queue *RRreadyQ;
+struct Queue *SRTNreadyQ;
 
 // 1- Fix Clock
 // 2- Sleep Processes
@@ -96,6 +101,7 @@ void CreateMsgAndSend(int pid, int q)
     msgsnd(QueueProcessesKey, &temp2, (sizeof(temp2.ExceTime) + sizeof(temp2.Order) + sizeof(temp2.remainingtime) + sizeof(temp2.Qutam)), IPC_NOWAIT);
 }
 
+
 void ForkProcess(int Quantum)
 {
     int processid = fork();
@@ -169,6 +175,85 @@ int SearchInPCBArray(int id)
     return -1;
 }
 
+int Search_Min_in_pcb()
+{
+    int min = PCB_Array[0].RemainingTime;
+    int MIN_index = -1;
+    for(int i=1; i< LastPlaceInArray ; i++)
+    {
+        if(PCB_Array[i].RemainingTime < min )
+        {
+            MIN_index = i;
+        }
+    }
+    return MIN_index;
+}
+
+/* if i get P :
+- nothing runing {first / if P end}
+- something is running and the current running not the mini
+
+- something is running and the current running is the mini
+
+*/// 
+void SRTN()
+{
+    
+    // processID_Now = SearchInPCBArray(SRTNreadyQ->head->key.id);
+    processID_Min_RT = Search_Min_in_pcb();
+    processID_Now = processID_Min_RT;
+
+    
+    
+    if(isRunning )
+    {
+        PCB_Array[Processid_run_now].RemainingTime =  Rem_CurrentP - (getClk() - Start_processing_time);
+        Rem_CurrentP = PCB_Array[Processid_run_now].RemainingTime ;
+    }
+    if ( (PCB_Array[processID_Min_RT].RemainingTime < Rem_CurrentP && SRTNreadyQ->head != NULL) || ( !isRunning && SRTNreadyQ->head != NULL) )
+    {
+        if(!isRunning) // nothing running
+        {
+            
+            Rem_CurrentP = PCB_Array[processID_Min_RT].RemainingTime;
+            Start_processing_time = getClk();
+           
+            if (PCB_Array[processID_Now].State == Ready)
+            {
+                processID_Now = processID_Min_RT;
+                PCB_Array[processID_Now].StartTime = getClk();
+                PCB_Array[processID_Now].State = Running;
+                isRunning = true;
+                Processid_run_now = processID_Min_RT;
+                ForkProcess(PCB_Array[processID_Now].RemainingTime);
+            }
+            else if(PCB_Array[processID_Min_RT].State == Waitting ) // case: a process RemT is the minimum
+            {
+                isRunning = true;
+                kill(PCB_Array[processID_Min_RT].Pid , SIGUSR1);// SIG CONT
+                PCB_Array[processID_Now].State = Running;
+                Processid_run_now = processID_Min_RT;
+            }
+        }
+        else if(isRunning) // case: the running process is not the minimum 
+        {
+                kill(PCB_Array[Processid_run_now].Pid , SIGUSR2); //SIG stop
+                isRunning = false;
+                // Processid_run_now = processID_Min_RT;
+                if (PCB_Array[processID_Now].State == Ready)
+                {
+                    Processid_run_now = processID_Min_RT;
+                    Start_processing_time = getClk();
+                    Rem_CurrentP = PCB_Array[processID_Min_RT].RemainingTime ;
+                    PCB_Array[processID_Now].StartTime = getClk();
+                    PCB_Array[processID_Now].State = Running;
+                    isRunning = true;
+                    ForkProcess(PCB_Array[processID_Now].RemainingTime);
+                }
+        }     
+
+    }
+}
 
 void RoundRobin()
 {
@@ -215,6 +300,7 @@ int main(int argc, char *argv[])
 
     HPFReadyQueue = CreatePriorityQueueOfProcesses();
     RRreadyQ = CreateQueueOfProcess();
+    SRTNreadyQ = CreateQueueOfProcess();
 
     QueueKey = msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY, 0666 | IPC_CREAT);
 
@@ -224,10 +310,15 @@ int main(int argc, char *argv[])
         int Rev = msgrcv(QueueKey, &temp, sizeof(temp.p), 0, IPC_NOWAIT);
         if (Rev != -1)
         {
-            if (Algo == 1)
+            if (Algo == 1)//HPF
             {
                 push(HPFReadyQueue, temp.p);
                 SetPCB_Array(HPFReadyQueue->head->p);
+            }//SRTN
+            else if(Algo == 2)
+            {
+                push(SRTNreadyQ,temp.p);
+                SetPCB_Array(temp.p);
             }
             else
             {
@@ -238,6 +329,10 @@ int main(int argc, char *argv[])
         if (Algo == 1)
         {
             HPF();
+        }
+        else if(Algo == 2)
+        {
+                SRTN();
         }
         else if (Algo == 3)
         {
