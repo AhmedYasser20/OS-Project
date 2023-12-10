@@ -8,6 +8,7 @@ struct Process
     int ArriveTime; //Arrive time of process (when i arrive to cpu or OS see it) 
     int Runtime;    //run time  (the time that OS give the process)
     int Priority;   //Priority of Processes
+    
 };
 
 typedef enum {

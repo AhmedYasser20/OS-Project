@@ -38,7 +38,7 @@ int main(int argc, char * argv[])
             Pop(ProcessesQueue);
         }
     }
-   // kill(Schedulerid,SIGUSR1);
+    kill(Schedulerid,SIGUSR1);
     int status;
     waitpid(Schedulerid,&status,0);
     // 6. Send the information to the scheduler at the appropriate time.

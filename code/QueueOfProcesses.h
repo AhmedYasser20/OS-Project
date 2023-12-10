@@ -66,5 +66,7 @@ void Push(struct Queue *q,struct Process Item);
 void Pop(struct Queue *q);
 
 
+void PopID(struct Queue *q,int IDTXT);
+
 
 #endif

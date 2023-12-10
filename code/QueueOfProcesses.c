@@ -1,5 +1,6 @@
 #include "QueueOfProcesses.h"
 #include <stdlib.h>
+#include <stdio.h>
 
 /*
     Function name: NewNode
@@ -63,7 +64,8 @@ void Push(struct Queue *q,struct Process item){
 
 */
 
-void Pop(struct Queue *q){
+void Pop(struct Queue *q)
+{
     if(q->head==NULL)
         return;
     
@@ -74,4 +76,43 @@ void Pop(struct Queue *q){
         q->tail=NULL;
 
     free(temp);    
+}
+void PopID(struct Queue *q, int IDTXT ) // this id is the same as comming from text file 
+{
+    struct QueueProcessNode* temp=q->head;
+    
+     if(temp==NULL)
+     {
+        // printf("sec1 \n ");
+        // sleep(5);
+        return;
+     }
+    struct QueueProcessNode* tempDummy=q->head;
+  
+    if (q->head->key.id == IDTXT)
+    {
+         q->head=q->head->next;
+         free(temp);
+         return ;
+    }
+
+    while(temp->next !=NULL )
+    {   
+
+            if(temp->next->key.id==IDTXT)
+            {
+                // printf("sec3  Id %d poped ",temp->next->key.id);
+                // sleep(5);
+                 tempDummy=temp->next;
+                temp->next=tempDummy->next;
+                free(tempDummy);
+                
+                return;
+            }
+            temp=temp->next;
+            
+    }
+    // printf("sec4\n");
+    // sleep(5);
+    return;
 }

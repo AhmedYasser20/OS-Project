@@ -41,6 +41,7 @@ int main(int argc, char * argv[])
     while (1)
     {
         sleep(1);
+        printf("i am major clock : %d",*shmaddr);
         (*shmaddr)++;
     }
 }
