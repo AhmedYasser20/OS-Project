@@ -22,6 +22,7 @@ int tempstart;
 
 void SignalHandlerProcessesStop(int sig)
 {
+    puts("Sleeping\n");
     raise(SIGSTOP);
 }
 
@@ -35,6 +36,7 @@ void SignalHandlerProcessesStop(int sig)
 
 void SignalHandlerProcessesCont(int sig)
 {
+    puts("Continue\n");
     raise(SIGCONT);
     signal(SIGUSR1, SignalHandlerProcessesCont);
 }

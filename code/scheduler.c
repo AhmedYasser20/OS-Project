@@ -6,7 +6,7 @@ bool Generator = true;                          // Boolen used to Notify if Gene
 bool isRunning = false;                         // Boolen used to Notify Schedular if Process is finshed or not
 ProcessPCB *PCB_Array;
 int LastPlaceInArray = 0;
-int processID_Now;
+int Processid_run_now;
 int processID_Min_RT;
 int Processid_run_now = -1; // Processid_run_now
 int Rem_CurrentP = 0;
@@ -78,7 +78,7 @@ void ForkProcess(int Quantum)
 
     int processid = fork();
 
-    PCB_Array[processID_Now].Pid = processid;
+    PCB_Array[Processid_run_now].Pid = processid;
     if (processid == 0)
     {
         char para = Quantum;
@@ -187,7 +187,7 @@ void SRTN()
     {
         return;
     }
-    processID_Now = processID_Min_RT;
+    Processid_run_now = processID_Min_RT;
 
     if (isRunning)
     {
@@ -203,20 +203,20 @@ void SRTN()
             Rem_CurrentP = PCB_Array[processID_Min_RT].RemainingTime;
             Start_processing_time = getClk();
 
-            if (PCB_Array[processID_Now].State == Ready)
+            if (PCB_Array[Processid_run_now].State == Ready)
             {
-                processID_Now = processID_Min_RT;
-                PCB_Array[processID_Now].StartTime = getClk();
-                PCB_Array[processID_Now].State = Running;
+                Processid_run_now = processID_Min_RT;
+                PCB_Array[Processid_run_now].StartTime = getClk();
+                PCB_Array[Processid_run_now].State = Running;
                 isRunning = true;
                 Processid_run_now = processID_Min_RT;
-                ForkProcess(PCB_Array[processID_Now].RemainingTime);
+                ForkProcess(PCB_Array[Processid_run_now].RemainingTime);
             }
             else if (PCB_Array[processID_Min_RT].State == Waitting) // case: a process RemT is the minimum
             {
                 isRunning = true;
                 kill(PCB_Array[processID_Min_RT].Pid, SIGCONT); // SIG CONT
-                PCB_Array[processID_Now].State = Running;
+                PCB_Array[Processid_run_now].State = Running;
                 Processid_run_now = processID_Min_RT;
             }
         }
@@ -225,15 +225,15 @@ void SRTN()
             PCB_Array[Processid_run_now].State = Waitting;
             int x = kill(PCB_Array[Processid_run_now].Pid, SIGUSR2); // SIG stop
             isRunning = true;
-            if (PCB_Array[processID_Now].State == Ready)
+            if (PCB_Array[Processid_run_now].State == Ready)
             {
                 Processid_run_now = processID_Min_RT;
                 Start_processing_time = getClk();
                 Rem_CurrentP = PCB_Array[processID_Min_RT].RemainingTime;
-                PCB_Array[processID_Now].StartTime = getClk();
-                PCB_Array[processID_Now].State = Running;
+                PCB_Array[Processid_run_now].StartTime = getClk();
+                PCB_Array[Processid_run_now].State = Running;
                 isRunning = true;
-                ForkProcess(PCB_Array[processID_Now].RemainingTime);
+                ForkProcess(PCB_Array[Processid_run_now].RemainingTime);
             }
  
         }
@@ -249,6 +249,7 @@ void RoundRobin()
             printf("Time %d \n",startRoundRobin);
             startRoundRobin=getClk();
             PCB_Array[Processid_run_now].State=Waitting;
+            printf("%d \n",PCB_Array[Processid_run_now].Pid);
             kill(PCB_Array[Processid_run_now].Pid, SIGUSR2);
             isRunning=false;
             Push(RRreadyQ, RRreadyQ->head->key);
