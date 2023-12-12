@@ -58,7 +58,9 @@ void SignalHandlerProcessesEnd(int sig)
 
     if(Algo==2)
     PopID(SRTNreadyQ, PCB_Array[Processid_run_now].P.id);
-     printf("At time %d process %d finished arr %d total %d remain %d wait %d\n",getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime,PCB_Array[Processid_run_now].P.Runtime,PCB_Array[Processid_run_now].RemainingTime,PCB_Array[Processid_run_now].WaitingTime);
+    if(Algo==3)
+    Pop(RRreadyQ);
+    printf("At time %d process %d finished arr %d total %d remain %d wait %d\n",getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime,PCB_Array[Processid_run_now].P.Runtime,PCB_Array[Processid_run_now].RemainingTime,PCB_Array[Processid_run_now].WaitingTime);
     isRunning = false;
 }
 
@@ -238,30 +240,35 @@ void SRTN()
     }
 }
 
+int startRoundRobin=0;
+
 void RoundRobin()
 {
-  
+    if(isRunning){
+        if(startRoundRobin+Quantum==getClk()){
+            printf("Time %d \n",startRoundRobin);
+            startRoundRobin=getClk();
+            PCB_Array[Processid_run_now].State=Waitting;
+            kill(PCB_Array[Processid_run_now].Pid, SIGUSR2);
+            isRunning=false;
+            Push(RRreadyQ, RRreadyQ->head->key);
+            Pop(RRreadyQ);
+        }
+    }
     if (!isRunning && RRreadyQ->head != NULL)
     {
         isRunning = true;
-        processID_Now = SearchInPCBArray(RRreadyQ->head->key.id);
-        if (PCB_Array[processID_Now].State == Ready)
+        startRoundRobin=getClk();
+        Processid_run_now = SearchInPCBArray(RRreadyQ->head->key.id);
+        if (PCB_Array[Processid_run_now].State == Ready)
         {
-            PCB_Array[processID_Now].StartTime = getClk();
-            PCB_Array[processID_Now].State = Running;
-            ForkProcess(Quantum);
+            PCB_Array[Processid_run_now].StartTime = getClk();
+            PCB_Array[Processid_run_now].State = Running;
+            ForkProcess(PCB_Array[Processid_run_now].P.Runtime);
         }
-        else if (PCB_Array[processID_Now].State == Waitting)
-        {
-            PCB_Array[processID_Now].State = Running;
-            kill(PCB_Array[processID_Now].Pid, SIGCONT);
-        }
-        else if (PCB_Array[processID_Now].State == End)
-        {
-            // POP
-            Pop(RRreadyQ);
-            isRunning = false;
-            return;
+        else if(PCB_Array[Processid_run_now].State == Waitting){
+            PCB_Array[Processid_run_now].State = Running;
+            kill(PCB_Array[Processid_run_now].Pid,SIGCONT);
         }
         Push(RRreadyQ, RRreadyQ->head->key);
         Pop(RRreadyQ);
