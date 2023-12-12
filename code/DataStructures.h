@@ -12,7 +12,7 @@ struct Process
 };
 
 typedef enum {
-    Ready,Running,Waitting,End
+    Ready,Running,Waitting,End     
 }StateOfProcess;
 
 // Define your process stored in the pcb struct
