@@ -293,7 +293,7 @@ void RoundRobin()
     if (((startRoundRobin + Quantum == getClk() && isRunning ) || ForceRR)&& RRreadyQ->head!=NULL)
     {
         startRoundRobin = getClk();
-        printf("Clk = %d\n", startRoundRobin);
+        printf("Clk = %d\n", getClk());
         int temp2 = SearchInPCBArray(RRreadyQ->head->key.id);
         printf("id %d State %d\n",temp2,PCB_Array[temp2].State);
         if (PCB_Array[temp2].State == Waitting)
@@ -336,7 +336,7 @@ void RoundRobin()
         if (RRreadyQ->head != NULL)
         {
             startRoundRobin = getClk();
-            printf("Clk = %d\n", startRoundRobin);
+            printf("Clk = %d\n", getClk());
             tempForRR = SearchInPCBArray(RRreadyQ->head->key.id);
             if (PCB_Array[tempForRR].State == Ready)
             {
