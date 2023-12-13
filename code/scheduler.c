@@ -23,7 +23,6 @@ struct Queue *SRTNreadyQ;
 // 4- Abo ismail
 // 5- Output
 
-
 /*
     Function name: SignalHandlerGentorEnd(
     Description:    Signal Handler for Signal User 1 - this Signal is one way form Generator to Scheduler
@@ -50,17 +49,20 @@ void SignalHandlerGentorEnd(int sig)
 void SignalHandlerProcessesEnd(int sig)
 {
     int status;
-    int sid = wait(&status);    
+    int sid = wait(&status);
 
-    PCB_Array[Processid_run_now].EndTime=getClk();
+    PCB_Array[Processid_run_now].EndTime = getClk();
     PCB_Array[Processid_run_now].State = End;
     PCB_Array[Processid_run_now].RemainingTime = 0;
 
-    if(Algo==2)
-    PopID(SRTNreadyQ, PCB_Array[Processid_run_now].P.id);
-    if(Algo==3)
-    Pop(RRreadyQ);
-    printf("At time %d process %d finished arr %d total %d remain %d wait %d\n",getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime,PCB_Array[Processid_run_now].P.Runtime,PCB_Array[Processid_run_now].RemainingTime,PCB_Array[Processid_run_now].WaitingTime);
+    if (Algo == 2)
+        PopID(SRTNreadyQ, PCB_Array[Processid_run_now].P.id);
+    if (Algo == 3)
+    {
+        printf("poped id %d %d\n", RRreadyQ->head->key.id, PCB_Array[Processid_run_now].P.id);
+        Pop(RRreadyQ);
+    }
+    printf("At time %d process %d finished arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime);
     isRunning = false;
 }
 
@@ -72,13 +74,11 @@ void SignalHandlerProcessesEnd(int sig)
     Output: void
 */
 
-
 void ForkProcess(int Quantum)
 {
 
     int processid = fork();
 
-    PCB_Array[Processid_run_now].Pid = processid;
     if (processid == 0)
     {
         char para = Quantum;
@@ -89,6 +89,7 @@ void ForkProcess(int Quantum)
         printf("Error while creating Scheduler");
         exit(-1);
     }
+    PCB_Array[Processid_run_now].Pid = processid;
 }
 
 void SetPCB_Array(struct Process p)
@@ -104,6 +105,7 @@ void SetPCB_Array(struct Process p)
     temp.ExecTime = 0;
     temp.WaitingTime = 0;
     temp.Pid = -1;
+    temp.StopTime = 0;
 
     PCB_Array[LastPlaceInArray] = temp;
     LastPlaceInArray++;
@@ -140,19 +142,17 @@ void HPF()
 {
     if (!isRunning && HPFReadyQueue->head != NULL)
     {
-        
-        Processid_run_now=SearchInPCBArray(HPFReadyQueue->head->p.id);
+
+        Processid_run_now = SearchInPCBArray(HPFReadyQueue->head->p.id);
         PCB_Array[Processid_run_now].StartTime = getClk();
         PCB_Array[Processid_run_now].State = Running;
         PCB_Array[Processid_run_now].itsLocationInArray = Processid_run_now;
-        printf("At time %d process %d starting arr %d total %d remain %d wait %d\n",getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime,PCB_Array[Processid_run_now].P.Runtime,PCB_Array[Processid_run_now].RemainingTime,PCB_Array[Processid_run_now].WaitingTime);
+        printf("At time %d process %d starting arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime);
         isRunning = true;
         ForkProcess(HPFReadyQueue->head->p.Runtime);
         pop(HPFReadyQueue);
     }
 }
-
-
 
 int Search_Min_in_pcb()
 {
@@ -163,9 +163,10 @@ int Search_Min_in_pcb()
     for (int i = 0; i < LastPlaceInArray; i++)
     {
         {
-            if (PCB_Array[i].RemainingTime != 0 && PCB_Array[i].RemainingTime < min /*PCB_Array[i].RemainingTime < min*/)
+            if (PCB_Array[i].RemainingTime != 0 && PCB_Array[i].RemainingTime < min)
             {
                 MIN_index = i;
+                min = PCB_Array[i].RemainingTime;
             }
         }
     }
@@ -223,7 +224,7 @@ void SRTN()
         else if (isRunning) // case: the running process is not the minimum
         {
             PCB_Array[Processid_run_now].State = Waitting;
-            int x = kill(PCB_Array[Processid_run_now].Pid, SIGUSR2); // SIG stop
+            int x = kill(PCB_Array[Processid_run_now].Pid, SIGSTOP); // SIG stop
             isRunning = true;
             if (PCB_Array[Processid_run_now].State == Ready)
             {
@@ -235,56 +236,110 @@ void SRTN()
                 isRunning = true;
                 ForkProcess(PCB_Array[Processid_run_now].RemainingTime);
             }
- 
         }
     }
 }
 
-int startRoundRobin=0;
+void StopProcess(int idInPCB_Array)
+{
 
+    if(PCB_Array[idInPCB_Array].Pid==-1){
+        printf("Errors in Stop id %d\n",idInPCB_Array);
+     
+        return;
+    }
+    int x = kill(PCB_Array[idInPCB_Array].Pid, SIGSTOP);
+    if (x < 0)
+    {
+        printf("Error in Stoping ");
+    }
+
+    PCB_Array[idInPCB_Array].StopTime = getClk();
+    PCB_Array[idInPCB_Array].State = Waitting;
+
+    printf("At time %d process %d Stoped arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[idInPCB_Array].P.id, PCB_Array[idInPCB_Array].P.ArriveTime, PCB_Array[idInPCB_Array].P.Runtime, PCB_Array[idInPCB_Array].RemainingTime, PCB_Array[idInPCB_Array].WaitingTime);
+}
+
+void ContiueProcess(int idInPCB_Array)
+{
+     if(PCB_Array[idInPCB_Array].Pid==-1){
+        printf("Errors in contine id %d\n",idInPCB_Array);
+     
+        return;
+    }
+
+    int x = kill(PCB_Array[idInPCB_Array].Pid, SIGCONT);
+    if (x < 0)
+    {
+        printf("Error in Resuming ");
+    }
+
+    PCB_Array[idInPCB_Array].WaitingTime += getClk() - PCB_Array[idInPCB_Array].StopTime;
+    PCB_Array[idInPCB_Array].State = Running;
+
+    printf("At time %d process %d Resumed arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[idInPCB_Array].P.id, PCB_Array[idInPCB_Array].P.ArriveTime, PCB_Array[idInPCB_Array].P.Runtime, PCB_Array[idInPCB_Array].RemainingTime, PCB_Array[idInPCB_Array].WaitingTime);
+}
+
+int startRoundRobin = 0;
+int tempForRR;
 void RoundRobin()
 {
-    if(isRunning){
-        if(startRoundRobin+Quantum==getClk()){
-            printf("Time %d \n",startRoundRobin);
-            startRoundRobin=getClk();
-            PCB_Array[Processid_run_now].State=Waitting;
-            printf("%d \n",PCB_Array[Processid_run_now].Pid);
-            kill(PCB_Array[Processid_run_now].Pid, SIGUSR2);
-            isRunning=false;
-            Push(RRreadyQ, RRreadyQ->head->key);
-            Pop(RRreadyQ);
-        }
-    }
-    if (!isRunning && RRreadyQ->head != NULL)
+    //
+   // printf("at clk %d  starttime %d  isrunning %d \n",getClk(),startRoundRobin+Quantum,isRunning);
+    if (startRoundRobin + Quantum == getClk() && isRunning)
     {
-        isRunning = true;
-        startRoundRobin=getClk();
-        Processid_run_now = SearchInPCBArray(RRreadyQ->head->key.id);
-        if (PCB_Array[Processid_run_now].State == Ready)
-        {
-            PCB_Array[Processid_run_now].StartTime = getClk();
-            PCB_Array[Processid_run_now].State = Running;
-            ForkProcess(PCB_Array[Processid_run_now].P.Runtime);
-        }
-        else if(PCB_Array[Processid_run_now].State == Waitting){
-            PCB_Array[Processid_run_now].State = Running;
-            kill(PCB_Array[Processid_run_now].Pid,SIGCONT);
-        }
-        Push(RRreadyQ, RRreadyQ->head->key);
+        startRoundRobin = getClk();
+        StopProcess(Processid_run_now);
+        printf("Clk = %d\n", startRoundRobin);
+        Push(RRreadyQ,RRreadyQ->head->key);
         Pop(RRreadyQ);
+        int temp=SearchInPCBArray(RRreadyQ->head->key.id);
+        if(PCB_Array[temp].State==Ready){
+              isRunning = true;
+              PCB_Array[temp].State == Running;
+              Processid_run_now=temp;
+              ForkProcess(PCB_Array[temp].P.Runtime);
+        }
+        else{
+            ContiueProcess(temp);
+            Processid_run_now=temp;
+        }
+        isRunning=true;
+    }
+    else if (!isRunning)
+    {
+
+        if (RRreadyQ->head != NULL)
+        {
+            startRoundRobin = getClk();
+            printf("Clk = %d\n", startRoundRobin);
+            tempForRR = SearchInPCBArray(RRreadyQ->head->key.id);
+            if (PCB_Array[tempForRR].State == Ready)
+            {
+                isRunning = true;
+                PCB_Array[tempForRR].State == Running;
+                Processid_run_now = tempForRR;
+                ForkProcess(PCB_Array[tempForRR].P.Runtime);
+            }
+            else if (PCB_Array[tempForRR].State == Waitting)
+            {
+                isRunning = true;
+                PCB_Array[tempForRR].State == Running;
+                kill(PCB_Array[tempForRR].Pid, SIGCONT);
+                Processid_run_now = tempForRR;
+            }
+            
+            printf("At time %d process %d starting arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime);
+        }
     }
 }
-
 int main(int argc, char *argv[])
 {
-
     Quantum = (*(argv[1])) - '0';
     Algo = (*(argv[0])) - '0';
     signal(SIGUSR1, SignalHandlerGentorEnd);
     signal(SIGUSR2, SignalHandlerProcessesEnd);
     PCB_Array = CreatePCB_Array();
-
 
     HPFReadyQueue = CreatePriorityQueueOfProcesses();
     RRreadyQ = CreateQueueOfProcess();
@@ -293,8 +348,6 @@ int main(int argc, char *argv[])
     QueueKey = msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY, 0666 | IPC_CREAT);
     printf("#At time x process y state arr w total z remain y wait k\n");
     initClk();
-
-    
 
     do
     {

@@ -12,40 +12,14 @@ int pid;
 int currentTiime;
 int tempstart;
 
-/*
-    Function name: SignalHandlerProcessesStop
-    Description:    Signal Handler for Signal User 2 -
-    Input: int
-    Output: void
 
-*/
 
-void SignalHandlerProcessesStop(int sig)
-{
-    puts("Sleeping\n");
-    raise(SIGSTOP);
-}
 
-/*
-    Function name: SignalHandlerProcessesCont
-    Description:    Signal Handler for Signal User 2 -
-    Input: int
-    Output: void
 
-*/
-
-void SignalHandlerProcessesCont(int sig)
-{
-    puts("Continue\n");
-    raise(SIGCONT);
-    signal(SIGUSR1, SignalHandlerProcessesCont);
-}
 
 
 int main(int agrc, char *argv[])
 {
-    signal(SIGUSR1, SignalHandlerProcessesCont);
-    signal(SIGUSR2, SignalHandlerProcessesStop);
 
     initClk();
     int start = getClk();
@@ -78,13 +52,14 @@ int main(int agrc, char *argv[])
             tempstart = currentTiime;
         }
 
-    } while (remQunatum != 0); // if status != ENND
+    } while (remQunatum > 0); // if status != ENND
 
     kill(getppid(), SIGUSR2);
+    destroyClk(false);
     exit(0);
 
     
-    destroyClk(false);
+   
 
     return 0;
 }
