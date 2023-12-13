@@ -52,7 +52,7 @@ int main(int agrc, char *argv[])
             tempstart = currentTiime;
         }
 
-    } while (remQunatum > 0); // if status != ENND
+    } while (remQunatum >0); // if status != ENND
 
     kill(getppid(), SIGUSR2);
     destroyClk(false);
