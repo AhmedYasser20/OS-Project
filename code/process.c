@@ -36,26 +36,16 @@ int main(int agrc, char *argv[])
     do
     {
         printf(" clk %d pid %d RemQ %d\n",getClk(),getpid(),remQunatum);
-        // prev=getClk();
-        // currentTiime = getClk();
-        // if (tempstart != currentTiime) // check if there is clock happened
-        // {
-        //     if (currentTiime - tempstart == 1)
-        //     {
-        //         remQunatum--;
-        //         printf(" clk %d pid %d RemQ %d\n",getClk(),getpid(),remQunatum);
-        //         tempstart = getClk();
-        //     }
-        // }
-        // currentTiime = getClk(); // the following if condition corrects if an iteruption occured at this line
-        // if (currentTiime - tempstart > 1)
-        // {
-        //     currentTiime = getClk();
-        //     tempstart = currentTiime;
-        // }
         while(prev==getClk());
+        if(getClk() - prev >1)
+        {
+            prev=getClk();
+        }
+        else
+        {
         prev=getClk();
         remQunatum--;
+        }
        
     } while (remQunatum >0); // if status != ENND
 
