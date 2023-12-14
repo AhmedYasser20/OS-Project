@@ -131,6 +131,7 @@ int SearchInPCBArray(int id)
     return -1;
 }
 
+
 void PrintPCBArray()
 {
     for (int i = 0; i < LastPlaceInArray; i++)
@@ -248,7 +249,7 @@ void SRTN()
                 PCB_Array[processID_Now].StartTime = getClk();
                 PCB_Array[processID_Now].State = Running;
                 isRunning = true;
-                PCB_Array[processID_Now].WaitingTime=PCB_Array[processID_Now].StartTime-PCB_Array[processID_Now].P.ArriveTime;
+                //PCB_Array[processID_Now].WaitingTime=PCB_Array[processID_Now].StartTime-PCB_Array[processID_Now].P.ArriveTime;
                 ForkProcess(PCB_Array[processID_Now].RemainingTime);
             }
 
@@ -305,7 +306,8 @@ int tempForRR;
 int temp22;
 bool contextSwitch=false;
 int ContextSwitchToo;
-void RoundRobin()
+int dummyQuantum;
+void RoundRobin1()
 {
     if (((startRoundRobin + Quantum == getClk() && isRunning) || ForceRR) && RRreadyQ->head != NULL)
     {
@@ -374,7 +376,55 @@ void RoundRobin()
         }
     }
 }
+struct QueueProcessNode* currentt;
+int x=1;
 
+void RoundRobin()
+{
+    
+    if(x && RRreadyQ->head != NULL)
+    {
+        x=0;
+        currentt=RRreadyQ->head;
+    }
+    if (!isRunning && RRreadyQ->head != NULL)  
+    {
+        // we have 2 possibilites either fork or continue 
+         dummyQuantum=Quantum;
+         Processid_run_now=SearchInPCBArray(currentt->key.id);  // lazem ykon el location dh hyrn
+         
+         isRunning=true;
+        if (PCB_Array[Processid_run_now].State==Ready)
+        {
+            PCB_Array[processID_Now].StartTime = getClk();
+                PCB_Array[processID_Now].State = Running;
+                isRunning = true;
+                Processid_run_now = processID_Min_RT;
+
+                ForkProcess(PCB_Array[processID_Now].RemainingTime);
+        }
+        else if (PCB_Array[Processid_run_now].State==Waitting)
+        {
+
+        }
+    }
+    else if (isRunning)
+    {
+        // then i need to 
+    }
+    if (dummyQuantum==0)
+    {
+        if (currentt->next==NULL)
+        {
+            currentt=RRreadyQ->head;
+        }
+        else
+        {
+            currentt=currentt->next;
+        }
+
+    }
+}
 int main(int argc, char *argv[])
 {
     Quantum = (*(argv[1])) - '0';
@@ -435,6 +485,7 @@ int main(int argc, char *argv[])
         }
     } while (isRunning || Generator || HPFReadyQueue->head != NULL || RRreadyQ->head != NULL || SRTNreadyQ->head != NULL);
     //commment
+
     DestoryedPCB_Array(PCB_Array);
     destroyClk(true);
     return 0;
