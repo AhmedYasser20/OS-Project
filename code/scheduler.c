@@ -403,7 +403,7 @@ int main(int argc, char *argv[])
             {
                 printf("clk %d Pushed in HPFQueue %d\n",getClk(), temp.p.id);
                 push(HPFReadyQueue, temp.p);
-                SetPCB_Array(HPFReadyQueue->head->p);
+                SetPCB_Array(temp.p);
             } // SRTN
             else if (Algo == 2)
             {
