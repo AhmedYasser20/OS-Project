@@ -31,6 +31,9 @@ void ReadInputFile(char *filename,struct Queue* q,int *NumberOfProcesses){
     char *BufferChar=NULL;
     size_t SizeOFBuffer=0;
     while(getline(&BufferChar,&SizeOFBuffer,ptr)!=-1){
+       for (int i = 0; i < strlen(BufferChar); i++)
+                printf("%c",BufferChar[i]);
+        printf("\n");        
         if(BufferChar[0]=='#'){
             continue;
         }
@@ -70,6 +73,7 @@ void ReadInputFile(char *filename,struct Queue* q,int *NumberOfProcesses){
                 }
              
             }
+          printf( "id %d Arrtime %d runtime %d prio %d \n",temp.id,temp.ArriveTime,temp.Runtime,temp.Priority);
           struct QueueProcessNode* Node=NewNode(temp);
           Push(q,temp);
           *NumberOfProcesses=*NumberOfProcesses+1;   

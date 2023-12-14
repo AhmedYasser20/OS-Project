@@ -182,61 +182,71 @@ int Search_Min_in_pcb()
 
 */
 //
+int processID_Now;
 void SRTN()
 {
+
     processID_Min_RT = Search_Min_in_pcb();
     if (processID_Min_RT == -1)
     {
+        
         return;
     }
-    Processid_run_now = processID_Min_RT;
-
+    processID_Now = processID_Min_RT;
     if (isRunning)
     {
         PCB_Array[Processid_run_now].RemainingTime = Rem_CurrentP - (getClk() - Start_processing_time);
+        Start_processing_time=getClk();
         Rem_CurrentP = PCB_Array[Processid_run_now].RemainingTime;
+
     }
 
     if ((PCB_Array[processID_Min_RT].RemainingTime < Rem_CurrentP && SRTNreadyQ->head != NULL && processID_Min_RT != Processid_run_now) || (!isRunning && SRTNreadyQ->head != NULL))
     {
+  
         if (!isRunning) // nothing running
         {
 
             Rem_CurrentP = PCB_Array[processID_Min_RT].RemainingTime;
             Start_processing_time = getClk();
 
-            if (PCB_Array[Processid_run_now].State == Ready)
+            if (PCB_Array[processID_Now].State == Ready)
             {
-                Processid_run_now = processID_Min_RT;
-                PCB_Array[Processid_run_now].StartTime = getClk();
-                PCB_Array[Processid_run_now].State = Running;
+                processID_Now = processID_Min_RT;
+                PCB_Array[processID_Now].StartTime = getClk();
+                PCB_Array[processID_Now].State = Running;
                 isRunning = true;
                 Processid_run_now = processID_Min_RT;
-                ForkProcess(PCB_Array[Processid_run_now].RemainingTime);
+
+                ForkProcess(PCB_Array[processID_Now].RemainingTime);
             }
             else if (PCB_Array[processID_Min_RT].State == Waitting) // case: a process RemT is the minimum
             {
+                printf("ContextSwitch2  \n");
                 isRunning = true;
                 kill(PCB_Array[processID_Min_RT].Pid, SIGCONT); // SIG CONT
-                PCB_Array[Processid_run_now].State = Running;
+                PCB_Array[processID_Now].State = Running;
                 Processid_run_now = processID_Min_RT;
             }
         }
         else if (isRunning) // case: the running process is not the minimum
         {
+            
+            printf("ContextSwitch1 \n");
             PCB_Array[Processid_run_now].State = Waitting;
             int x = kill(PCB_Array[Processid_run_now].Pid, SIGSTOP); // SIG stop
             isRunning = true;
-            if (PCB_Array[Processid_run_now].State == Ready)
+            if (PCB_Array[processID_Now].State == Ready)
             {
                 Processid_run_now = processID_Min_RT;
                 Start_processing_time = getClk();
                 Rem_CurrentP = PCB_Array[processID_Min_RT].RemainingTime;
-                PCB_Array[Processid_run_now].StartTime = getClk();
-                PCB_Array[Processid_run_now].State = Running;
+                PCB_Array[processID_Now].StartTime = getClk();
+                PCB_Array[processID_Now].State = Running;
                 isRunning = true;
-                ForkProcess(PCB_Array[Processid_run_now].RemainingTime);
+                ForkProcess(PCB_Array[processID_Now].RemainingTime);
             }
+
         }
     }
 }
@@ -391,6 +401,7 @@ int main(int argc, char *argv[])
         {
             if (Algo == 1) // HPF
             {
+                printf("clk %d Pushed in HPFQueue %d\n",getClk(), temp.p.id);
                 push(HPFReadyQueue, temp.p);
                 SetPCB_Array(HPFReadyQueue->head->p);
             } // SRTN

@@ -1,6 +1,6 @@
 #include "headers.h"
 
-void clearResources(int);
+void clearResources();
 void CreateCLK();
 void CreateScheduler();
 int Schedulerid;
@@ -27,13 +27,21 @@ int main(int argc, char * argv[])
     // TODO Generation Main Loop
     // 5. Create a data structure for processes and provide it with its parameters.
     int time;
+    printf("NumberOfProcesses ==== %d \n",NumberOfProcesses);
+    NumberOfProcesses--;
     while(NumberOfProcesses){
         time=getClk();
         if(ProcessesQueue->head->key.ArriveTime<=time){
             struct MsgGeneratorScheduler temp;
             temp.type=1;
             temp.p=ProcessesQueue->head->key;
-            msgsnd(QueueKey,&temp,sizeof(temp.p),!IPC_NOWAIT);
+            int rev =msgsnd(QueueKey,&temp,sizeof(temp.p),!IPC_NOWAIT);
+            if(rev<0){
+                puts("Pushed \n");
+            }
+            else{
+                printf("clk %d sent id %d\n",getClk(),temp.p.id);
+            }
             NumberOfProcesses--;
             Pop(ProcessesQueue);
         }
@@ -42,11 +50,12 @@ int main(int argc, char * argv[])
     int status;
     waitpid(Schedulerid,&status,0);
     // 6. Send the information to the scheduler at the appropriate time.
+    clearResources();
     // 7. Clear clock resources
    destroyClk(true);
 }
 
-void clearResources(int signum)
+void clearResources()
 {
     //TODO Clears all resources in case of interruption
     msgctl(QueueKey,IPC_RMID,(struct msqid_ds *)0);
