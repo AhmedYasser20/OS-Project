@@ -286,9 +286,30 @@ void ContiueProcess(int idInPCB_Array)
 int testt = 1;
 int startRoundRobin = 0;
 int tempForRR;
+int temp22;
+bool contextSwitch=false;
+int ContextSwitchToo;
 void RoundRobin()
 {
-    if (((startRoundRobin + Quantum == getClk() && isRunning) || ForceRR) && RRreadyQ->head != NULL)
+    if(contextSwitch && temp22<getClk()){
+        contextSwitch=false;
+        startRoundRobin = getClk();
+            if (PCB_Array[ContextSwitchToo].State == Ready)
+            {
+                printf("Forking %d \n", RRreadyQ->head->key.id);
+                isRunning = true;
+                PCB_Array[ContextSwitchToo].State = Running;
+                Processid_run_now = ContextSwitchToo;
+                ForkProcess(PCB_Array[ContextSwitchToo].P.Runtime);
+            }
+            else
+            {
+
+                ContiueProcess(ContextSwitchToo);
+                Processid_run_now = ContextSwitchToo;
+            }
+    }
+    else if (((startRoundRobin + Quantum == getClk() && isRunning) || ForceRR) && RRreadyQ->head != NULL)
     {
         startRoundRobin = getClk();
         printf("Clk = %d\n", getClk());
@@ -304,28 +325,12 @@ void RoundRobin()
             printf("pushed %d\n", RRreadyQ->head->key.id);
             Push(RRreadyQ, RRreadyQ->head->key);
             Pop(RRreadyQ);
-            int temp = SearchInPCBArray(RRreadyQ->head->key.id);
-            
-            
-            int temp22 = getClk();
-            while (temp22 == getClk());    
-            startRoundRobin = getClk();
-            
-            
-            if (PCB_Array[temp].State == Ready)
-            {
-                printf("Forking %d \n", RRreadyQ->head->key.id);
-                isRunning = true;
-                PCB_Array[temp].State = Running;
-                Processid_run_now = temp;
-                ForkProcess(PCB_Array[temp].P.Runtime);
-            }
-            else
-            {
 
-                ContiueProcess(temp);
-                Processid_run_now = temp;
-            }
+
+            ContextSwitchToo = SearchInPCBArray(RRreadyQ->head->key.id);
+            temp22 = getClk();
+            contextSwitch=true;  
+           
         }
         else if (PCB_Array[temp2].State == Ready)
         {
@@ -379,19 +384,7 @@ int main(int argc, char *argv[])
     do
     {
         struct MsgGeneratorScheduler temp;
-        if (Algo == 1)
-        {
-            HPF();
-        }
-        else if (Algo == 2)
-        {
-
-            SRTN();
-        }
-        else if (Algo == 3)
-        {
-            RoundRobin();
-        }
+        
 
         int Rev = msgrcv(QueueKey, &temp, sizeof(temp.p), 0, IPC_NOWAIT);
         if (Rev != -1)
@@ -408,12 +401,24 @@ int main(int argc, char *argv[])
             }
             else
             {
-                printf("Pushed in RRQeue %d\n", temp.p.id);
+                printf("clk %d Pushed in RRQeue %d\n",getClk(), temp.p.id);
                 Push(RRreadyQ, temp.p);
                 SetPCB_Array(temp.p);
             }
         }
+        if (Algo == 1)
+        {
+            HPF();
+        }
+        else if (Algo == 2)
+        {
 
+            SRTN();
+        }
+        else if (Algo == 3)
+        {
+            RoundRobin();
+        }
     } while (isRunning || Generator || HPFReadyQueue->head != NULL || RRreadyQ->head != NULL || SRTNreadyQ->head != NULL);
     DestoryedPCB_Array(PCB_Array);
     destroyClk(true);
