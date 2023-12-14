@@ -288,8 +288,6 @@ int startRoundRobin = 0;
 int tempForRR;
 void RoundRobin()
 {
-    //
-    // printf("at clk %d  starttime %d  isrunning %d \n",getClk(),startRoundRobin+Quantum,isRunning);
     if (((startRoundRobin + Quantum == getClk() && isRunning) || ForceRR) && RRreadyQ->head != NULL)
     {
         startRoundRobin = getClk();

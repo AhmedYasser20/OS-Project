@@ -36,7 +36,7 @@ int main(int agrc, char *argv[])
     do
     {
         printf(" clk %d pid %d RemQ %d\n",getClk(),getpid(),remQunatum);
-       // prev=getClk();
+        // prev=getClk();
         // currentTiime = getClk();
         // if (tempstart != currentTiime) // check if there is clock happened
         // {
