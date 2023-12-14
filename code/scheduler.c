@@ -290,23 +290,30 @@ void RoundRobin()
 {
     //
     // printf("at clk %d  starttime %d  isrunning %d \n",getClk(),startRoundRobin+Quantum,isRunning);
-    if (((startRoundRobin + Quantum == getClk() && isRunning ) || ForceRR)&& RRreadyQ->head!=NULL)
+    if (((startRoundRobin + Quantum == getClk() && isRunning) || ForceRR) && RRreadyQ->head != NULL)
     {
         startRoundRobin = getClk();
         printf("Clk = %d\n", getClk());
         int temp2 = SearchInPCBArray(RRreadyQ->head->key.id);
-        printf("id %d State %d\n",temp2,PCB_Array[temp2].State);
+        printf("id %d State %d\n", temp2, PCB_Array[temp2].State);
         if (PCB_Array[temp2].State == Waitting)
         {
             ContiueProcess(temp2);
         }
-        else if(PCB_Array[temp2].State == Running)
+        else if (PCB_Array[temp2].State == Running)
         {
             StopProcess(temp2);
             printf("pushed %d\n", RRreadyQ->head->key.id);
             Push(RRreadyQ, RRreadyQ->head->key);
             Pop(RRreadyQ);
             int temp = SearchInPCBArray(RRreadyQ->head->key.id);
+            
+            
+            int temp22 = getClk();
+            while (temp22 == getClk());    
+            startRoundRobin = getClk();
+            
+            
             if (PCB_Array[temp].State == Ready)
             {
                 printf("Forking %d \n", RRreadyQ->head->key.id);
@@ -317,11 +324,13 @@ void RoundRobin()
             }
             else
             {
+
                 ContiueProcess(temp);
                 Processid_run_now = temp;
             }
         }
-        else if(PCB_Array[temp2].State == Ready){
+        else if (PCB_Array[temp2].State == Ready)
+        {
             printf("Forking %d \n", RRreadyQ->head->key.id);
             PCB_Array[temp2].State = Running;
             Processid_run_now = temp2;
@@ -372,7 +381,7 @@ int main(int argc, char *argv[])
     do
     {
         struct MsgGeneratorScheduler temp;
-         if (Algo == 1)
+        if (Algo == 1)
         {
             HPF();
         }
@@ -401,12 +410,12 @@ int main(int argc, char *argv[])
             }
             else
             {
-                printf("Pushed in RRQeue %d\n",temp.p.id);
+                printf("Pushed in RRQeue %d\n", temp.p.id);
                 Push(RRreadyQ, temp.p);
                 SetPCB_Array(temp.p);
             }
         }
-       
+
     } while (isRunning || Generator || HPFReadyQueue->head != NULL || RRreadyQ->head != NULL || SRTNreadyQ->head != NULL);
     DestoryedPCB_Array(PCB_Array);
     destroyClk(true);
