@@ -9,7 +9,6 @@
     Output: struct QueueProcessNode* (Pointer)
 
 */
-int c=0;
 struct QueueProcessNode *NewNode(struct Process item)
 {
     struct QueueProcessNode *temp = (struct QueueProcessNode *)
@@ -47,22 +46,14 @@ struct Queue *CreateQueueOfProcess()
 void Push(struct Queue *q, struct Process item)
 {
     struct QueueProcessNode *temp = NewNode(item);
-     if (c==0)
-         {
-            q->head=q->tail=NULL;
-         }
     if (q->tail == NULL)
     {
         q->head = q->tail = temp;
-        //printf("LAST PRINTF\n");
-        c++;
         return;
     }
-   // printf("LAST PRINTF11\n");
-   // if ("q->tail %d",q->tail)
+
     q->tail->next = temp;
     q->tail = temp; 
-    c++;
 }
 
 /*
@@ -87,40 +78,81 @@ void Pop(struct Queue *q)
     free(temp);
 }
 
-void PopID(struct Queue *q, int IDTXT ) // this id is the same as comming from text file 
-{
-    struct QueueProcessNode* temp=q->head;
+// void PopID(struct Queue *q, int IDTXT ) // this id is the same as comming from text file 
+// {
+//     struct QueueProcessNode* temp=q->head;
     
-     if(temp==NULL)
-     {
-        return;
-     }
-    struct QueueProcessNode* tempDummy=q->head;
+//      if(temp==NULL)
+//      {
+//         return;
+//      }
+//     struct QueueProcessNode* tempDummy=q->head;
   
-    if (q->head->key.id == IDTXT)
-    {
-         q->head=q->head->next;
-         c--;
+//     if (q->head->key.id == IDTXT)
+//     {
+//          q->head=q->head->next;
+//          c--;
         
-         free(temp);
-         return ;
-    }
+//          free(temp);
+//          return ;
+//     }
 
-    while(temp->next !=NULL )
-    {   
+//     while(temp->next !=NULL )
+//     {   
 
-            if(temp->next->key.id==IDTXT)
-            {
-                 tempDummy=temp->next;
-                temp->next=tempDummy->next;
-                c--;
-                free(tempDummy);
+//             if(temp->next->key.id==IDTXT)
+//             {
+//                  tempDummy=temp->next;
+//                 temp->next=tempDummy->next;
+//                 c--;
+//                 free(tempDummy);
                 
-                return;
-            }
-            temp=temp->next;
+//                 return;
+//             }
+//             temp=temp->next;
             
-    }
+//     }
  
-    return;
+//     return;
+// }
+
+
+
+
+void pop_id(struct Queue* queue, int targetId)
+ {
+    struct QueueProcessNode* current = queue->head;
+    struct QueueProcessNode* previous = NULL;
+
+    while (current != NULL && current->key.id != targetId) 
+    {
+        previous = current;
+        current = current->next;
+    }
+
+    if (current == NULL) {
+        // Node with the specified ID not found
+        printf("Node with ID %d not found in the queue\n", targetId);
+        return;
+    }
+
+    if (previous == NULL) 
+    {
+        // Node to be removed is the first node
+        queue->head = current->next;
+    } 
+    else 
+    {
+        // Node to be removed is not the first node
+        previous->next = current->next;
+    }
+
+    // If the removed node was the last node, update the trailer
+    if (current == queue->tail)
+     {
+        queue->tail = previous;
+    }
+
+    // Free the memory of the removed node
+    free(current);
 }

@@ -57,7 +57,7 @@ void SignalHandlerProcessesEnd(int sig)
     PCB_Array[Processid_run_now].RemainingTime = 0;
 
     if (Algo == 2)
-        PopID(SRTNreadyQ, PCB_Array[Processid_run_now].P.id);
+        pop_id(SRTNreadyQ, PCB_Array[Processid_run_now].P.id);
     if (Algo == 3)
     {
         ForceRR = true;
@@ -200,7 +200,12 @@ void SRTN()
         Rem_CurrentP = PCB_Array[Processid_run_now].RemainingTime;
 
     }
-    //printf("isRunning: %d  SRTNreadyQ->head != NULL %d \n",isRunning,SRTNreadyQ->head != NULL);
+   
+    if (  getClk()==34)
+    {
+        printf("isRunning: %d  SRTNreadyQ->head != NULL %d \n",isRunning,SRTNreadyQ->head != NULL);
+    }
+    
     if ((PCB_Array[processID_Min_RT].RemainingTime < Rem_CurrentP && SRTNreadyQ->head != NULL && processID_Min_RT != Processid_run_now) || (!isRunning && SRTNreadyQ->head != NULL))
     {
   

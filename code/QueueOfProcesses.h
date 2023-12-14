@@ -66,7 +66,9 @@ void Push(struct Queue *q,struct Process Item);
 void Pop(struct Queue *q);
 
 
-void PopID(struct Queue *q,int IDTXT);
+//void PopID(struct Queue *q,int IDTXT);
+
+void pop_id(struct Queue* queue, int targetId);
 
 
 #endif
