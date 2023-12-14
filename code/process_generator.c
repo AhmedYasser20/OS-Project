@@ -28,7 +28,6 @@ int main(int argc, char * argv[])
     // 5. Create a data structure for processes and provide it with its parameters.
     int time;
     printf("NumberOfProcesses ==== %d \n",NumberOfProcesses);
-    NumberOfProcesses--;
     while(NumberOfProcesses){
         time=getClk();
         if(ProcessesQueue->head->key.ArriveTime<=time){
