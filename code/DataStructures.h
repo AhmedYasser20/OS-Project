@@ -27,6 +27,8 @@ typedef struct ProcessPCB
     int EndTime;
     int Pid;
     int StopTime;
+    int TurnAroundTime;
+    int WeightedTurnAroundTime;
     StateOfProcess State;
 }ProcessPCB ;
 
@@ -49,22 +51,7 @@ struct array
     
 };
 
-struct Log
-{
-    int time;
-    int Pid;
-    char* state;
-    int ArriveT;
-    int TotalT;
-    int RemainingT;
-    int ResponseT;
-    int TA;
-    int WAT;
-    
-    int RunningT;
-    int waitingT;
-    
-};
+
 
 
 
