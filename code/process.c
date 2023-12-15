@@ -36,19 +36,22 @@ int main(int agrc, char *argv[])
     do
     {
 
-        while(prev==getClk());
-        if(getClk() - prev >1)
-        {
-            prev=getClk();
-        }
-        else
-        {
-        prev=getClk();
+        // while(prev==getClk());
+        // if(getClk() - prev >1)
+        // {
+        //     prev=getClk();
+        // }
+        // else
+        // {
+        // prev=getClk();
+        // remQunatum--;
+        // }
+        sleep(1);
         remQunatum--;
-        }
-               printf(" clk %d pid %d RemQ %d\n",getClk(),getpid(),remQunatum);
+        printf(" clk %d pid %d RemQ %d\n",getClk(),getpid(),remQunatum);
     } while (remQunatum >0); // if status != ENND
 
+    printf("i need to pop\n");
     kill(getppid(), SIGUSR2);
     destroyClk(false);
     exit(0);
