@@ -177,7 +177,7 @@ void ForkProcess(int Quantumtemp)
         exit(-1);
     }
     PCB_Array[Processid_run_now].Pid = processid;
-
+    fprintf(schedulerLog, "#At time %d process %d starting arr %d total %d remain %d wait %d\n",  getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime); 
     PCB_Array[Processid_run_now].RemainingTime = PCB_Array[Processid_run_now].RemainingTime - Quantum;
     if (PCB_Array[Processid_run_now].RemainingTime <= 0)
     {
@@ -186,7 +186,6 @@ void ForkProcess(int Quantumtemp)
     }
   
  
-     fprintf(schedulerLog, "#At time %d process %d starting arr %d total %d remain %d wait %d\n",  getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime); 
 }
 
 void RemoveFromPCB_Array(int indx)
@@ -366,6 +365,8 @@ void ContiueProcess(int idInPCB_Array)
 
     PCB_Array[idInPCB_Array].WaitingTime += getClk() - PCB_Array[idInPCB_Array].StopTime;
     PCB_Array[idInPCB_Array].State = Running;
+    fprintf(schedulerLog, "At time %d process %d Resumed arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[idInPCB_Array].P.id, PCB_Array[idInPCB_Array].P.ArriveTime, PCB_Array[idInPCB_Array].P.Runtime, PCB_Array[idInPCB_Array].RemainingTime, PCB_Array[idInPCB_Array].WaitingTime);
+
     PCB_Array[idInPCB_Array].RemainingTime -= Quantum;
     if (PCB_Array[idInPCB_Array].RemainingTime <= 0)
     {
@@ -373,7 +374,6 @@ void ContiueProcess(int idInPCB_Array)
     }
     Processid_run_now = idInPCB_Array;
     //printf("At time %d process %d Resumed arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[idInPCB_Array].P.id, PCB_Array[idInPCB_Array].P.ArriveTime, PCB_Array[idInPCB_Array].P.Runtime, PCB_Array[idInPCB_Array].RemainingTime, PCB_Array[idInPCB_Array].WaitingTime);
-    fprintf(schedulerLog, "At time %d process %d Resumed arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[idInPCB_Array].P.id, PCB_Array[idInPCB_Array].P.ArriveTime, PCB_Array[idInPCB_Array].P.Runtime, PCB_Array[idInPCB_Array].RemainingTime, PCB_Array[idInPCB_Array].WaitingTime);
 }
 
 
