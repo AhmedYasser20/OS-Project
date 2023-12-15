@@ -20,12 +20,66 @@ struct Queue *FCFSreadyQ;
 bool ForceRR = false;
 int dummyQuantum=3;
 bool lastone=false;
+struct QueueProcessNode* current;
 // 1- Fix Clock
 // 2- Sleep Processes
 // 3- End Processes =>
 // 4- Abo ismail
 // 5- Output
 
+void SetPCB_Array(struct Process p)
+{
+    ProcessPCB temp;
+
+    temp.P = p;
+    temp.itsLocationInArray = LastPlaceInArray;
+    temp.StartTime = 0;
+    temp.EndTime = 0;
+    temp.RemainingTime = p.Runtime;
+    temp.State = Ready;
+    temp.ExecTime = 0;
+    temp.WaitingTime = 0;
+    temp.Pid = -1;
+    temp.StopTime = 0;
+
+    PCB_Array[LastPlaceInArray] = temp;
+
+    LastPlaceInArray++;
+}
+
+void RevFrmGenetor(){
+struct MsgGeneratorScheduler temp;
+ int Rev = msgrcv(QueueKey, &temp, sizeof(temp.p), 0, IPC_NOWAIT);
+
+        if (Rev != -1)
+        {
+            if (Algo == 1) // HPF
+            {
+                printf("clk %d Pushed in HPFQueue %d\n", getClk(), temp.p.id);
+                push(HPFReadyQueue, temp.p);
+                SetPCB_Array(temp.p);
+            } // SRTN
+            else if (Algo == 2)
+            {
+                printf("clk %d Pushed in STRNQeue %d\n", getClk(), temp.p.id);
+                Push(SRTNreadyQ, temp.p);
+                SetPCB_Array(temp.p);
+            }
+            else if (Algo == 3)
+
+            {
+                printf(" Pushed in RRQeue %d\n",  temp.p.id);
+                if(RRreadyQ->head==NULL){
+                     Push(RRreadyQ, temp.p);
+                     current=RRreadyQ->head;
+                }
+                else{
+                    Push(RRreadyQ, temp.p);
+                }
+                SetPCB_Array(temp.p);
+            }
+        }
+}
 void PrintPCBArray()
 {
     for (int i = 0; i < LastPlaceInArray; i++)
@@ -84,7 +138,14 @@ void SignalHandlerProcessesEnd(int sig)
     {
         ForceRR = true;
         printf("poped id %d %d\n", RRreadyQ->head->key.id, PCB_Array[Processid_run_now].P.id);
-        Pop(RRreadyQ);
+        int x=current->key.id;
+        RevFrmGenetor();
+        current=current->next;
+        pop_id(RRreadyQ,x);
+         if(current==NULL){
+            current=RRreadyQ->head;
+        }
+           
         lastone=false;
     }
     printf("At time %d process %d finished arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime);
@@ -125,25 +186,7 @@ void ForkProcess(int Quantumtemp)
     PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime);
 }
 
-void SetPCB_Array(struct Process p)
-{
-    ProcessPCB temp;
 
-    temp.P = p;
-    temp.itsLocationInArray = LastPlaceInArray;
-    temp.StartTime = 0;
-    temp.EndTime = 0;
-    temp.RemainingTime = p.Runtime;
-    temp.State = Ready;
-    temp.ExecTime = 0;
-    temp.WaitingTime = 0;
-    temp.Pid = -1;
-    temp.StopTime = 0;
-
-    PCB_Array[LastPlaceInArray] = temp;
-
-    LastPlaceInArray++;
-}
 
 void RemoveFromPCB_Array(int indx)
 {
@@ -310,6 +353,7 @@ void ContiueProcess(int idInPCB_Array)
     if(PCB_Array[idInPCB_Array].RemainingTime<=0){
         lastone=true;
     }
+    Processid_run_now=idInPCB_Array;
     printf("At time %d process %d Resumed arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[idInPCB_Array].P.id, PCB_Array[idInPCB_Array].P.ArriveTime, PCB_Array[idInPCB_Array].P.Runtime, PCB_Array[idInPCB_Array].RemainingTime, PCB_Array[idInPCB_Array].WaitingTime);
 }
 
@@ -319,6 +363,7 @@ int tempForRR;
 int temp22;
 bool contextSwitch = false;
 int ContextSwitchToo;
+
 void RoundRobin()
 {
 
@@ -326,28 +371,30 @@ void RoundRobin()
 
         return;
     }
-    if (((startRoundRobin + Quantum == getClk() && isRunning) || ForceRR) && RRreadyQ->head != NULL)
+    if (((startRoundRobin + Quantum == getClk() && isRunning) || ForceRR) && current != NULL)
     {
         startRoundRobin = getClk();
-        printf("RRClk = %d\n", getClk());
-        int temp2 = SearchInPCBArray(RRreadyQ->head->key.id);
-        printf("id %d State %d\n", temp2, PCB_Array[temp2].State);
+        int temp2 = SearchInPCBArray(current->key.id);
         if (PCB_Array[temp2].State == Waitting)
         {
             isRunning = true;
             ContiueProcess(temp2);
+
         }
         else if (PCB_Array[temp2].State == Running)
         {
+            RevFrmGenetor();
+             current=current->next;
+            if(current==NULL){
+                current=RRreadyQ->head;
+            }
             StopProcess(temp2);
-            printf("pushed %d\n", RRreadyQ->head->key.id);
-            Push(RRreadyQ, RRreadyQ->head->key);
-            Pop(RRreadyQ);
+           
 
-            ContextSwitchToo = SearchInPCBArray(RRreadyQ->head->key.id);
+            ContextSwitchToo = SearchInPCBArray(current->key.id);
             if (PCB_Array[ContextSwitchToo].State == Ready)
             {
-                printf("Forking %d \n", RRreadyQ->head->key.id);
+                printf("Forking %d \n", current->key.id);
                 isRunning = true;
                 PCB_Array[ContextSwitchToo].State = Running;
                 Processid_run_now = ContextSwitchToo;
@@ -363,7 +410,7 @@ void RoundRobin()
         }
         else if (PCB_Array[temp2].State == Ready)
         {
-            printf("Forking %d \n", RRreadyQ->head->key.id);
+            printf("Forking %d \n", current->key.id);
             PCB_Array[temp2].State = Running;
             Processid_run_now = temp2;
             ForkProcess(PCB_Array[temp2].P.Runtime);
@@ -374,11 +421,11 @@ void RoundRobin()
     else if (!isRunning)
     {
 
-        if (RRreadyQ->head != NULL)
+        if (current != NULL)
         {
             startRoundRobin = getClk();
             printf("Clk = %d\n", getClk());
-            tempForRR = SearchInPCBArray(RRreadyQ->head->key.id);
+            tempForRR = SearchInPCBArray(current->key.id);
             if (PCB_Array[tempForRR].State == Ready)
             {
                 isRunning = true;
@@ -395,6 +442,8 @@ void RoundRobin()
     }
 }
 
+
+
 int main(int argc, char *argv[])
 {
     Quantum = (*(argv[1])) - '0';
@@ -410,32 +459,11 @@ int main(int argc, char *argv[])
     QueueKey = msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY, 0666 | IPC_CREAT);
     printf("#At time x process y state arr w total z remain y wait k\n");
     initClk();
-      struct MsgGeneratorScheduler temp;
+      
     do
     {
-        int Rev = msgrcv(QueueKey, &temp, sizeof(temp.p), 0, IPC_NOWAIT);
-        if (Rev != -1)
-        {
-            if (Algo == 1) // HPF
-            {
-                printf("clk %d Pushed in HPFQueue %d\n", getClk(), temp.p.id);
-                push(HPFReadyQueue, temp.p);
-                SetPCB_Array(temp.p);
-            } // SRTN
-            else if (Algo == 2)
-            {
-                printf("clk %d Pushed in STRNQeue %d\n", getClk(), temp.p.id);
-                Push(SRTNreadyQ, temp.p);
-                SetPCB_Array(temp.p);
-            }
-            else if (Algo == 3)
 
-            {
-                printf(" Pushed in RRQeue %d\n",  temp.p.id);
-                Push(RRreadyQ, temp.p);
-                SetPCB_Array(temp.p);
-            }
-        }
+        RevFrmGenetor();
         if (Algo == 1)
         {
             HPF();

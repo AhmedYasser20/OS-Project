@@ -35,7 +35,7 @@ int main(int agrc, char *argv[])
     int prev=getClk();
     do
     {
-        printf(" clk %d pid %d RemQ %d\n",getClk(),getpid(),remQunatum);
+
         while(prev==getClk());
         if(getClk() - prev >1)
         {
@@ -46,7 +46,7 @@ int main(int agrc, char *argv[])
         prev=getClk();
         remQunatum--;
         }
-       
+               printf(" clk %d pid %d RemQ %d\n",getClk(),getpid(),remQunatum);
     } while (remQunatum >0); // if status != ENND
 
     kill(getppid(), SIGUSR2);
