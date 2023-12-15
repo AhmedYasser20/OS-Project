@@ -182,10 +182,9 @@ void SignalHandlerProcessesEnd(int sig)
 
 void ForkProcess(int Quantumtemp)
 {
-      if(diff_finish_start!=0)
-      totalwaittingtime += getClk() - diff_finish_start ;
-      diff_finish_start=0;
-       printf("TOTALL WAITINGG TIME %0.2f \n",totalwaittingtime);
+     
+    totalwaittingtime += getClk() - diff_finish_start ;
+    printf("TOTALL WAITINGG TIME %0.2f \n",totalwaittingtime);
 
     int processid = fork();
 
@@ -363,6 +362,8 @@ void SRTN()
 
 void StopProcess(int idInPCB_Array)
 {
+    diff_finish_start = getClk();
+    printf("DIFFFFF FINSH  %0.2f \n",diff_finish_start);
 
     if (PCB_Array[idInPCB_Array].Pid == -1)
     {
@@ -385,6 +386,8 @@ void StopProcess(int idInPCB_Array)
 
 void ContiueProcess(int idInPCB_Array)
 {
+    totalwaittingtime += getClk() - diff_finish_start ;
+    printf("TOTALL WAITINGG TIME %0.2f \n",totalwaittingtime);
 
     int x = kill(PCB_Array[idInPCB_Array].Pid, SIGCONT);
     printf("x: %d idInPCB_Array %d\n",x,idInPCB_Array);
@@ -579,10 +582,11 @@ void writePref(){
     double cpu_finish_time = getClk();
     double useful_Time = cpu_finish_time - totalwaittingtime;
     float CPU_utilization = (float) (useful_Time / cpu_finish_time) *100;
-    fprintf(schedulerPerf, "CPU utilization = %.2f%%\n",totalwaittingtime);
-    fprintf(schedulerPerf, "CPU utilization = %.2f%%\n",cpu_finish_time);
+    fprintf(schedulerPerf, "totalwaittingtime = %.2f\n",totalwaittingtime);
+    fprintf(schedulerPerf, "cpu_finish_time = %.2f\n",cpu_finish_time);
+    fprintf(schedulerPerf, "useful_Time = %.2f\n",useful_Time);
     fprintf(schedulerPerf, "CPU utilization = %.2f%%\n",CPU_utilization);
-    fprintf(schedulerPerf, "CPU utilization = %.2f%%\n",useful_Time);
+    
     
     fprintf(schedulerPerf, "avg_WeightedTurnAroundTime = %.2f\n",avg_WeightedTurnAroundTime);
     fprintf(schedulerPerf, "avg_waittingtime = %.2f\n",avg_waittingtime);
