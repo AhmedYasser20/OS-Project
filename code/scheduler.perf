@@ -1,7 +1,7 @@
-totalwaittingtime = 5.00
-cpu_finish_time = 31.00
-useful_Time = 26.00
-CPU utilization = 83.87%
-avg_WeightedTurnAroundTime = 1.33
-avg_waittingtime = 3.17
-sqrt(VAR) = 0.47%
+totalwaittingtime = 8.00
+cpu_finish_time = 99.00
+useful_Time = 91.00
+CPU utilization = 91.92%
+avg_WeightedTurnAroundTime = 2.68
+avg_waittingtime = 33.00
+sqrt(VAR) = 0.92%

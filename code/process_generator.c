@@ -5,7 +5,7 @@ void CreateCLK();
 void CreateScheduler();
 int Schedulerid;
 int QueueKey;
-char Quntam;
+char Quntam[3];
 char choice;
 int main(int argc, char * argv[])
 {
@@ -17,8 +17,7 @@ int main(int argc, char * argv[])
     int NumberOfProcesses=0; 
     ReadInputFile("processes.txt",ProcessesQueue,&NumberOfProcesses);
     // 2. Ask the user for the chosen scheduling algorithm and its parameters, if there are any.
-    Quntam='3';
-    choice=ChooseAlgorithm(&Quntam);
+    choice=ChooseAlgorithm(Quntam);
     // 3. Initiate and create the scheduler and clock processes.
     CreateCLK();
     CreateScheduler();

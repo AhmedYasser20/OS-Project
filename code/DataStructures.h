@@ -27,8 +27,8 @@ typedef struct ProcessPCB
     int EndTime;
     int Pid;
     int StopTime;
-    int TurnAroundTime;
-    int WeightedTurnAroundTime;
+    double TurnAroundTime;
+    double WeightedTurnAroundTime;
     StateOfProcess State;
 }ProcessPCB ;
 
