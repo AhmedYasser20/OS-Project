@@ -50,7 +50,7 @@ void SetPCB_Array(struct Process p, Node *tempMemoryNode)
 }
 
 
-Node *AlloacteMemoryForProcess(struct Process p)
+Node *AlloacteMemoryForProcess(struct Process p,int pushtoWaiting)
 {
     Node *tempNode = allocateMemory(buddySystem, p.memsize);
     if (tempNode)
@@ -59,13 +59,13 @@ Node *AlloacteMemoryForProcess(struct Process p)
         printf("At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress));
         return tempNode;
     }
-    puts("AYYYYYYY");
+    if(pushtoWaiting)
     PushLinkedList(WaitingQueue, p);
     return tempNode;
 }
 
-int AsignProcess(struct Process temp){
-     Node *tempMemoryNode = AlloacteMemoryForProcess(temp);
+int AsignProcess(struct Process temp,int pushtoWaitingQueue){
+     Node *tempMemoryNode = AlloacteMemoryForProcess(temp,pushtoWaitingQueue);
         if (tempMemoryNode)
         {
             if (Algo == 1) // HPF
@@ -101,7 +101,7 @@ void RevFrmGenetor()
 
     if (Rev != -1)
     {
-        AsignProcess(temp.p);
+        AsignProcess(temp.p,1);
     }
     
 }
@@ -129,8 +129,7 @@ void dellocateMemoryForProcess(){
 void CheckWaitingQueue(){
     struct linkedListProcessNode* current= WaitingQueue->head;
     while(current){
-      
-        if(AsignProcess(current->key)){
+        if(AsignProcess(current->key,0)){
             pop_idLinkedList(WaitingQueue,current->key.id);
         }   
         current=current->next;
