@@ -1,6 +1,7 @@
 #include "headers.h"
 #include <math.h>
 FILE *schedulerLog;
+FILE *MemoryLog;
 FILE *schedulerPerf;
 double diff_finish_start = 0;
 double totalwaittingtime = 0;
@@ -54,6 +55,7 @@ Node *AlloacteMemoryForProcess(struct Process p)
     Node *tempNode = allocateMemory(buddySystem, p.memsize);
     if (tempNode)
     {
+         fprintf(MemoryLog,"At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress));
         printf("At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress));
         return tempNode;
     }
@@ -119,6 +121,7 @@ void SignalHandlerGentorEnd(int sig)
 
 void dellocateMemoryForProcess(){
     printf("At time %d freed %d bytes from process %d from %d to %d\n",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
+    fprintf(MemoryLog,"At time %d freed %d bytes from process %d from %d to %d\n",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
     dellocateMemory( buddySystem,PCB_Array[Processid_run_now].memoryBlock);
 }
 
@@ -208,7 +211,7 @@ void ForkProcess(int Quantumtemp)
     PCB_Array[Processid_run_now].Pid = processid;
     PCB_Array[Processid_run_now].WaitingTime += (getClk() - PCB_Array[Processid_run_now].P.ArriveTime);
 
-    fprintf(schedulerLog, "#At time %d process %d starting arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime);
+    fprintf(schedulerLog, "At time %d process %d starting arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime);
     PCB_Array[Processid_run_now].RemainingTime = PCB_Array[Processid_run_now].RemainingTime - Quantum;
     if (PCB_Array[Processid_run_now].RemainingTime <= 0)
     {
@@ -499,7 +502,7 @@ void writePref()
 int main(int argc, char *argv[])
 {
     schedulerLog = fopen("scheduler.log", "w");
-
+    MemoryLog =fopen("memory.log", "w");
     Quantum = atoi((argv[1]));
     Algo = (*(argv[0])) - '0';
     signal(SIGUSR1, SignalHandlerGentorEnd);
@@ -534,6 +537,7 @@ int main(int argc, char *argv[])
     } while (isRunning || Generator || HPFReadyQueue->head != NULL || RRreadyQ->head != NULL || SRTNreadyQ->head != NULL || WaitingQueue->head != NULL);
 
     fclose(schedulerLog);
+    fclose(MemoryLog);
     writePref();
     DestoryedPCB_Array(PCB_Array);
     destroyClk(true);
