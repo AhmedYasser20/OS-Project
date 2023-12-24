@@ -521,6 +521,7 @@ int main(int argc, char *argv[])
     FCFSreadyQ = CreateQueueOfProcess();
     QueueKey = msgget(MSG_QUEUE_GENERATOR_SCHEDULER_KEY, 0666 | IPC_CREAT);
     fprintf(schedulerLog, "#At time x process y state arr w total z remain y wait k\n");
+    fprintf(MemoryLog, "#At time x allocated y bytes for process z from i to j\n");
     initClk();
 
     do
