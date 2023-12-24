@@ -3,7 +3,6 @@
 #include <string.h>
 #include "QueueOfProcesses.h"
 #include "IO_Functions.h"
-
 char ChooseAlgorithm(char *Quntam){
     char choice;
     do{
@@ -63,6 +62,9 @@ void ReadInputFile(char *filename,struct Queue* q,int *NumberOfProcesses){
                     case 3:
                         temp.Priority=num;
                         break;
+                    case 4:
+                        temp.memsize=num;
+                        break;    
                     default:
                         break;
                     }

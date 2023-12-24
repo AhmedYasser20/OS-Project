@@ -19,7 +19,7 @@
 #include "DataStructures.h"
 #include "QueueOfProcesses.h"
 #include "IO_Functions.h"
-
+#include "memory.h"
 #include "PriorityQueue.h"
 #include "ArrayOfPCB.h"
 #include "PCBLinkedList.h"

@@ -1,6 +1,21 @@
 #ifndef DATA_STRUCTURES_HEADER
 #define DATA_STRUCTURES_HEADER
 
+typedef struct Node
+{
+    int startAddress;
+    int Size;
+    int isFree;
+    int child; //1- left 2 - right 
+    struct Node * Next;
+    struct Node * Prev;
+} Node;
+
+
+typedef struct buddyList
+{
+    Node * Head;
+}buddyList;
 
 struct Process
 {
@@ -8,7 +23,7 @@ struct Process
     int ArriveTime; //Arrive time of process (when i arrive to cpu or OS see it) 
     int Runtime;    //run time  (the time that OS give the process)
     int Priority;   //Priority of Processes
-    
+    int memsize;
 };
 
 typedef enum {
@@ -29,6 +44,7 @@ typedef struct ProcessPCB
     int StopTime;
     double TurnAroundTime;
     double WeightedTurnAroundTime;
+    Node * memoryBlock;
     StateOfProcess State;
 }ProcessPCB ;
 

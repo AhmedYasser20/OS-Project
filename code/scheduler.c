@@ -2,11 +2,10 @@
 #include <math.h>
 FILE *schedulerLog;
 FILE *schedulerPerf;
-double diff_finish_start=0;
-double totalwaittingtime=0;
+double diff_finish_start = 0;
+double totalwaittingtime = 0;
 double avg_WeightedTurnAroundTime;
 double avg_waittingtime;
-
 
 int QueueKey;                                   // Key of Queue between Scheduler and Processes Generator
 struct PriorityQueueOfProcesses *HPFReadyQueue; // Inital Queue using to store Processes That read Form Generator
@@ -14,7 +13,6 @@ bool Generator = true;                          // Boolen used to Notify if Gene
 bool isRunning = false;                         // Boolen used to Notify Schedular if Process is finshed or not
 ProcessPCB *PCB_Array;
 int LastPlaceInArray = 0;
-int Processid_run_now;
 int processID_Min_RT;
 int Processid_run_now = -1; // Processid_run_now
 int Rem_CurrentP = 0;
@@ -22,6 +20,8 @@ int Start_processing_time;
 int pidnow;
 int Quantum;
 int Algo;
+buddyList *buddySystem;
+struct Queue *WaitingQueue;
 struct Queue *RRreadyQ;
 struct Queue *SRTNreadyQ;
 struct Queue *FCFSreadyQ;
@@ -30,12 +30,9 @@ bool lastone = false;
 struct QueueProcessNode *current;
 int startRoundRobin = 0;
 
-
-
-void SetPCB_Array(struct Process p)
+void SetPCB_Array(struct Process p, Node *tempMemoryNode)
 {
     ProcessPCB temp;
-
     temp.P = p;
     temp.itsLocationInArray = LastPlaceInArray;
     temp.StartTime = 0;
@@ -46,10 +43,22 @@ void SetPCB_Array(struct Process p)
     temp.WaitingTime = 0;
     temp.Pid = -1;
     temp.StopTime = 0;
-
+    temp.memoryBlock=tempMemoryNode;
     PCB_Array[LastPlaceInArray] = temp;
-
     LastPlaceInArray++;
+}
+
+
+Node *AlloacteMemoryForProcess(struct Process p)
+{
+    Node *tempNode = allocateMemory(buddySystem, p.memsize);
+    if (tempNode)
+    {
+        printf("At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress));
+        return tempNode;
+    }
+    Push(WaitingQueue, p);
+    return tempNode;
 }
 
 void RevFrmGenetor()
@@ -59,32 +68,30 @@ void RevFrmGenetor()
 
     if (Rev != -1)
     {
-        if (Algo == 1) // HPF
+        Node *tempMemoryNode = AlloacteMemoryForProcess(temp.p);
+        if (tempMemoryNode)
         {
-           // printf("clk %d Pushed in HPFQueue %d\n", getClk(), temp.p.id);
-            push(HPFReadyQueue, temp.p);
-            SetPCB_Array(temp.p);
-        } // SRTN
-        else if (Algo == 2)
-        {
-           // printf("clk %d Pushed in STRNQeue %d\n", getClk(), temp.p.id);
-            Push(SRTNreadyQ, temp.p);
-            SetPCB_Array(temp.p);
-        }
-        else if (Algo == 3)
-
-        {
-           // printf(" Pushed in RRQeue %d\n", temp.p.id);
-            if (RRreadyQ->head == NULL)
+            if (Algo == 1) // HPF
             {
-                Push(RRreadyQ, temp.p);
-                current = RRreadyQ->head;
-            }
-            else
+                push(HPFReadyQueue, temp.p);
+            } // SRTN
+            else if (Algo == 2)
             {
-                Push(RRreadyQ, temp.p);
+                Push(SRTNreadyQ, temp.p);
             }
-            SetPCB_Array(temp.p);
+            else if (Algo == 3)
+            {
+                if (RRreadyQ->head == NULL)
+                {
+                    Push(RRreadyQ, temp.p);
+                    current = RRreadyQ->head;
+                }
+                else
+                {
+                    Push(RRreadyQ, temp.p);
+                }
+            }
+            SetPCB_Array(temp.p,tempMemoryNode);
         }
     }
 }
@@ -103,6 +110,16 @@ void SignalHandlerGentorEnd(int sig)
     Generator = 0;
 }
 
+void dellocateMemoryForProcess(){
+    printf("At time %d freed %d bytes from process %d from %d to %d",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
+    dellocateMemory( buddySystem,PCB_Array[Processid_run_now].memoryBlock);
+}
+
+void CheckWaitingQueue(){
+
+}
+
+
 /*
     Function name: SignalHandlerProcessesEnd
     Description:    Signal Handler for Signal User 2 - this Signal is one way form  Forked Process to Scheduler
@@ -120,13 +137,16 @@ void SignalHandlerProcessesEnd(int sig)
     PCB_Array[Processid_run_now].EndTime = getClk();
     PCB_Array[Processid_run_now].State = End;
     PCB_Array[Processid_run_now].RemainingTime = 0;
-
+    dellocateMemoryForProcess();
+      
+      
     if (Algo == 2)
         pop_id(SRTNreadyQ, PCB_Array[Processid_run_now].P.id);
     if (Algo == 3)
     {
-        dummyQuantum=0;
-        while(startRoundRobin==getClk());
+        dummyQuantum = 0;
+        while (startRoundRobin == getClk())
+            ;
         int x = current->key.id;
         RevFrmGenetor();
         current = current->next;
@@ -140,7 +160,7 @@ void SignalHandlerProcessesEnd(int sig)
     }
     PCB_Array[Processid_run_now].TurnAroundTime = PCB_Array[Processid_run_now].EndTime - PCB_Array[Processid_run_now].P.ArriveTime;
     PCB_Array[Processid_run_now].WeightedTurnAroundTime = PCB_Array[Processid_run_now].TurnAroundTime / PCB_Array[Processid_run_now].P.Runtime;
-     fprintf(schedulerLog, "At time %d process %d finished arr %d total %d remain %d wait %d  TA %.0f  WTA %.2f\n",getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime, PCB_Array[Processid_run_now].TurnAroundTime, PCB_Array[Processid_run_now].WeightedTurnAroundTime );
+    fprintf(schedulerLog, "At time %d process %d finished arr %d total %d remain %d wait %d  TA %.0f  WTA %.2f\n", getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime, PCB_Array[Processid_run_now].TurnAroundTime, PCB_Array[Processid_run_now].WeightedTurnAroundTime);
     isRunning = false;
     diff_finish_start = getClk();
 }
@@ -155,11 +175,10 @@ void SignalHandlerProcessesEnd(int sig)
 
 void ForkProcess(int Quantumtemp)
 {
-    
-    isRunning =true;
-    
-    totalwaittingtime += getClk() - diff_finish_start ;
-   // printf("TOTALL WAITINGG TIME %0.2f \n",totalwaittingtime);
+
+    isRunning = true;
+
+    totalwaittingtime += getClk() - diff_finish_start;
 
     int processid = fork();
 
@@ -174,17 +193,14 @@ void ForkProcess(int Quantumtemp)
         exit(-1);
     }
     PCB_Array[Processid_run_now].Pid = processid;
-    PCB_Array[Processid_run_now].WaitingTime += ( getClk() - PCB_Array[Processid_run_now].P.ArriveTime );
+    PCB_Array[Processid_run_now].WaitingTime += (getClk() - PCB_Array[Processid_run_now].P.ArriveTime);
 
-    fprintf(schedulerLog, "#At time %d process %d starting arr %d total %d remain %d wait %d\n",  getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime); 
+    fprintf(schedulerLog, "#At time %d process %d starting arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[Processid_run_now].P.id, PCB_Array[Processid_run_now].P.ArriveTime, PCB_Array[Processid_run_now].P.Runtime, PCB_Array[Processid_run_now].RemainingTime, PCB_Array[Processid_run_now].WaitingTime);
     PCB_Array[Processid_run_now].RemainingTime = PCB_Array[Processid_run_now].RemainingTime - Quantum;
     if (PCB_Array[Processid_run_now].RemainingTime <= 0)
     {
-      //  printf("LASSSSST %d \n", getClk());
         lastone = true;
     }
-  
- 
 }
 
 void RemoveFromPCB_Array(int indx)
@@ -214,7 +230,6 @@ void HPF()
         PCB_Array[Processid_run_now].State = Running;
         PCB_Array[Processid_run_now].itsLocationInArray = Processid_run_now;
         isRunning = true;
-
         ForkProcess(HPFReadyQueue->head->p.Runtime);
         pop(HPFReadyQueue);
     }
@@ -239,14 +254,10 @@ int Search_Min_in_pcb()
     return MIN_index;
 }
 
-
-
-
 void StopProcess(int idInPCB_Array)
 {
     diff_finish_start = getClk();
     isRunning = false;
-
 
     if (PCB_Array[idInPCB_Array].Pid == -1)
     {
@@ -263,14 +274,14 @@ void StopProcess(int idInPCB_Array)
     PCB_Array[idInPCB_Array].StopTime = getClk();
     PCB_Array[idInPCB_Array].State = Waitting;
 
-    fprintf(schedulerLog, "At time %d process %d Stoped arr %d total %d remain %d wait %d\n" ,getClk(), PCB_Array[idInPCB_Array].P.id, PCB_Array[idInPCB_Array].P.ArriveTime, PCB_Array[idInPCB_Array].P.Runtime, PCB_Array[idInPCB_Array].RemainingTime, PCB_Array[idInPCB_Array].WaitingTime );
+    fprintf(schedulerLog, "At time %d process %d Stoped arr %d total %d remain %d wait %d\n", getClk(), PCB_Array[idInPCB_Array].P.id, PCB_Array[idInPCB_Array].P.ArriveTime, PCB_Array[idInPCB_Array].P.Runtime, PCB_Array[idInPCB_Array].RemainingTime, PCB_Array[idInPCB_Array].WaitingTime);
 }
 
 void ContiueProcess(int idInPCB_Array)
 {
     isRunning = true;
 
-    totalwaittingtime += getClk() - diff_finish_start ;
+    totalwaittingtime += getClk() - diff_finish_start;
 
     kill(PCB_Array[idInPCB_Array].Pid, SIGCONT);
     kill(PCB_Array[idInPCB_Array].Pid, SIGUSR1);
@@ -302,7 +313,7 @@ void SRTN()
         return;
     }
 
-    if (isRunning)  // updating remaining time for the running Process
+    if (isRunning) // updating remaining time for the running Process
     {
         PCB_Array[Processid_run_now].RemainingTime = Rem_CurrentP - (getClk() - Start_processing_time);
         Start_processing_time = getClk();
@@ -311,7 +322,7 @@ void SRTN()
     /*
     - nothing is running
     - something is running and another Process arrived
-    - 
+    -
     */
     if ((PCB_Array[processID_Min_RT].RemainingTime < Rem_CurrentP && SRTNreadyQ->head != NULL && processID_Min_RT != Processid_run_now) || (!isRunning && SRTNreadyQ->head != NULL))
     {
@@ -321,11 +332,11 @@ void SRTN()
             Rem_CurrentP = PCB_Array[processID_Min_RT].RemainingTime;
             Start_processing_time = getClk();
 
-            if (PCB_Array[processID_Min_RT].State == Ready)   //case: nothing is running and a process arrived
+            if (PCB_Array[processID_Min_RT].State == Ready) // case: nothing is running and a process arrived
             {
                 PCB_Array[processID_Min_RT].StartTime = getClk();
                 PCB_Array[processID_Min_RT].State = Running;
-                
+
                 Processid_run_now = processID_Min_RT;
 
                 ForkProcess(PCB_Array[processID_Min_RT].RemainingTime);
@@ -341,9 +352,8 @@ void SRTN()
         else if (isRunning) // case: - something is running and another Process arrived with smaller Remaining time
         {
 
-
             PCB_Array[Processid_run_now].State = Waitting;
-            
+
             PCB_Array[Processid_run_now].StopTime = getClk();
 
             StopProcess(Processid_run_now);
@@ -356,7 +366,6 @@ void SRTN()
                 PCB_Array[processID_Min_RT].StartTime = getClk();
                 PCB_Array[processID_Min_RT].State = Running;
 
-           
                 ForkProcess(PCB_Array[processID_Min_RT].RemainingTime);
             }
         }
@@ -374,118 +383,117 @@ void RoundRobin()
     if (current != NULL)
     {
         int inexTorun = SearchInPCBArray(current->key.id);
-        
-        if(lastone)
+
+        if (lastone)
         {
             return;
         }
         if (dummyQuantum == 0 || !isRunning)
         {
-            dummyQuantum=Quantum;
-            isRunning=true;
+            dummyQuantum = Quantum;
+            isRunning = true;
 
             if (PCB_Array[inexTorun].State == Ready)
             {
-                //we need to fork
-                startRoundRobin=getClk();
+                // we need to fork
+                startRoundRobin = getClk();
                 PCB_Array[inexTorun].State = Running;
                 Processid_run_now = inexTorun;
-                PCB_Array[inexTorun].StartTime=getClk();
+                PCB_Array[inexTorun].StartTime = getClk();
                 ForkProcess(PCB_Array[inexTorun].P.Runtime);
-
             }
             else if (PCB_Array[inexTorun].State == Waitting)
             {
                 Processid_run_now = inexTorun;
-                startRoundRobin=getClk();
+                startRoundRobin = getClk();
                 ContiueProcess(inexTorun);
             }
         }
-        else if (dummyQuantum > 0 &&isRunning)
+        else if (dummyQuantum > 0 && isRunning)
         {
-            if(getClk()-startRoundRobin ==1 )
+            if (getClk() - startRoundRobin == 1)
             {
-            dummyQuantum--;
-            startRoundRobin=getClk();
+                dummyQuantum--;
+                startRoundRobin = getClk();
             }
         }
-        if(dummyQuantum==0  && isRunning )
+        if (dummyQuantum == 0 && isRunning)
         {
-            //printf("ContextSwitch\n");
+            // printf("ContextSwitch\n");
             RevFrmGenetor();
-            current=current->next;
-            if(current==NULL)
+            current = current->next;
+            if (current == NULL)
             {
-                current=RRreadyQ->head;
+                current = RRreadyQ->head;
             }
-            isRunning=false;
-            if(PCB_Array[inexTorun].State ==Ready)
+            isRunning = false;
+            if (PCB_Array[inexTorun].State == Ready)
             {
-               return;
+                return;
             }
-            else 
+            else
             {
-            StopProcess(inexTorun);
+                StopProcess(inexTorun);
             }
         }
     }
 }
 
-void writePref(){
+void writePref()
+{
     schedulerPerf = fopen("scheduler.perf", "w");
-    for(int i=0 ; i<LastPlaceInArray  ; i++) // calculating  [avg_WeightedTurnAroundTime]  AND  [avg_waittingtime]
+    for (int i = 0; i < LastPlaceInArray; i++) // calculating  [avg_WeightedTurnAroundTime]  AND  [avg_waittingtime]
     {
         avg_WeightedTurnAroundTime += PCB_Array[i].WeightedTurnAroundTime;
-        avg_waittingtime           += PCB_Array[i].WaitingTime;
+        avg_waittingtime += PCB_Array[i].WaitingTime;
     }
     avg_WeightedTurnAroundTime = avg_WeightedTurnAroundTime / (LastPlaceInArray);
-    avg_waittingtime           = avg_waittingtime  / (LastPlaceInArray);
+    avg_waittingtime = avg_waittingtime / (LastPlaceInArray);
 
-    double X=0;
-    for(int i=0 ; i<LastPlaceInArray  ; i++){
-        X += (PCB_Array[i].WeightedTurnAroundTime - avg_WeightedTurnAroundTime)* (PCB_Array[i].WeightedTurnAroundTime - avg_WeightedTurnAroundTime);
+    double X = 0;
+    for (int i = 0; i < LastPlaceInArray; i++)
+    {
+        X += (PCB_Array[i].WeightedTurnAroundTime - avg_WeightedTurnAroundTime) * (PCB_Array[i].WeightedTurnAroundTime - avg_WeightedTurnAroundTime);
     }
-    double VAR=0;
+    double VAR = 0;
     VAR = X / (LastPlaceInArray);
 
     /*Explanation: Suppose you have 4 processes (A, B, C and D).
     1. You calculate the WTA of A, B, C, and D (say WTA1, WTA2, WTA3, and WTA4)
     2. You then calculate the average of these four values (say X)
     3. You then subtract each value from this average, square it, and add them together. (WTA1-X)^2 + (WTA2-X)^2 + (WTA3-X)^2 + (WTA4-X)^2
-    4. Divide what you computed in (3) by the number of processes which is 4. What you computed so far is the variance. 
+    4. Divide what you computed in (3) by the number of processes which is 4. What you computed so far is the variance.
     5. Standard deviation is the square root of the variance.
 */
 
     double cpu_finish_time = getClk();
     double useful_Time = cpu_finish_time - totalwaittingtime;
-    float CPU_utilization = (float) (useful_Time / cpu_finish_time) *100;
-    fprintf(schedulerPerf, "totalwaittingtime = %.2f\n",totalwaittingtime);
-    fprintf(schedulerPerf, "cpu_finish_time = %.2f\n",cpu_finish_time);
-    fprintf(schedulerPerf, "useful_Time = %.2f\n",useful_Time);
-    fprintf(schedulerPerf, "CPU utilization = %.2f%%\n",CPU_utilization);
-    
-    
-    fprintf(schedulerPerf, "avg_WeightedTurnAroundTime = %.2f\n",avg_WeightedTurnAroundTime);
-    fprintf(schedulerPerf, "avg_waittingtime = %.2f\n",avg_waittingtime);
-    double tempvar=sqrt(VAR);
+    float CPU_utilization = (float)(useful_Time / cpu_finish_time) * 100;
+    fprintf(schedulerPerf, "totalwaittingtime = %.2f\n", totalwaittingtime);
+    fprintf(schedulerPerf, "cpu_finish_time = %.2f\n", cpu_finish_time);
+    fprintf(schedulerPerf, "useful_Time = %.2f\n", useful_Time);
+    fprintf(schedulerPerf, "CPU utilization = %.2f%%\n", CPU_utilization);
+
+    fprintf(schedulerPerf, "avg_WeightedTurnAroundTime = %.2f\n", avg_WeightedTurnAroundTime);
+    fprintf(schedulerPerf, "avg_waittingtime = %.2f\n", avg_waittingtime);
+    double tempvar = sqrt(VAR);
     fprintf(schedulerPerf, "sqrt(VAR) = %.2lf%%\n", tempvar);
 
     fclose(schedulerPerf);
 }
 
-
 int main(int argc, char *argv[])
 {
-    schedulerLog  = fopen("scheduler.log" , "w");
-   
+    schedulerLog = fopen("scheduler.log", "w");
 
-    Quantum=atoi((argv[1]));
+    Quantum = atoi((argv[1]));
     Algo = (*(argv[0])) - '0';
     signal(SIGUSR1, SignalHandlerGentorEnd);
     signal(SIGUSR2, SignalHandlerProcessesEnd);
     PCB_Array = CreatePCB_Array();
-
+    buddySystem = initializeBuddySystem();
     HPFReadyQueue = CreatePriorityQueueOfProcesses();
+    WaitingQueue = CreateQueueOfProcess();
     RRreadyQ = CreateQueueOfProcess();
     SRTNreadyQ = CreateQueueOfProcess();
     FCFSreadyQ = CreateQueueOfProcess();
@@ -503,15 +511,14 @@ int main(int argc, char *argv[])
         }
         else if (Algo == 2)
         {
-
             SRTN();
         }
         else if (Algo == 3)
         {
             RoundRobin();
         }
-    } while (isRunning || Generator || HPFReadyQueue->head != NULL || RRreadyQ->head != NULL || SRTNreadyQ->head != NULL);
-    
+    } while (isRunning || Generator || HPFReadyQueue->head != NULL || RRreadyQ->head != NULL || SRTNreadyQ->head != NULL || WaitingQueue->head != NULL);
+
     fclose(schedulerLog);
     writePref();
     DestoryedPCB_Array(PCB_Array);
