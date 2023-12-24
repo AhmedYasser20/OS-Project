@@ -101,7 +101,6 @@ void RevFrmGenetor()
 
     if (Rev != -1)
     {
-        puts("ABOSNOW ASSigned");
         AsignProcess(temp.p);
     }
     
