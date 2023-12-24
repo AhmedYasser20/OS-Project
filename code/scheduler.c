@@ -111,7 +111,7 @@ void SignalHandlerGentorEnd(int sig)
 }
 
 void dellocateMemoryForProcess(){
-    printf("At time %d freed %d bytes from process %d from %d to %d",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
+    printf("At time %d freed %d bytes from process %d from %d to %d\n",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
     dellocateMemory( buddySystem,PCB_Array[Processid_run_now].memoryBlock);
 }
 
@@ -121,12 +121,11 @@ void CheckWaitingQueue(){
 
 
 /*
-    Function name: SignalHandlerProcessesEnd
+    Function name:  SignalHandlerProcessesEnd
     Description:    Signal Handler for Signal User 2 - this Signal is one way form  Forked Process to Scheduler
                     Used to Set IsRunning Boolen
     Input: int
     Output: void
-
 */
 
 void SignalHandlerProcessesEnd(int sig)
