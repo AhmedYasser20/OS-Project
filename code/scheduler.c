@@ -125,7 +125,6 @@ void dellocateMemoryForProcess(){
     printf("At time %d freed %d bytes from process %d from %d to %d\n",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
     fprintf(MemoryLog,"At time %d freed %d bytes from process %d from %d to %d\n",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
     dellocateMemory( buddySystem,PCB_Array[Processid_run_now].memoryBlock);
-    printMemory(buddySystem);
 }
 
 void CheckWaitingQueue(){
@@ -137,7 +136,6 @@ void CheckWaitingQueue(){
         }   
         current=current->next;
     }
-    printLIn(WaitingQueue);
 }
 
 
