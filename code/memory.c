@@ -6,6 +6,15 @@
 #define MIN(a,b) (((a)<(b))?(a):(b))
 #define MAX(a,b) (((a)>(b))?(a):(b))
 
+
+
+/*
+    Function name: createNode
+    Description: allocate memory for Node and set size and its startAddresss
+    Input: int ,int ,int 
+    Output: Node * 
+*/
+
 Node * createNode(int startAddress,int size,int child){
     Node * temp=(Node *)malloc(sizeof(Node));
     temp->startAddress=startAddress;
@@ -20,19 +29,38 @@ Node * createNode(int startAddress,int size,int child){
 void freeNode(Node * ptr){
     free(ptr);
 }
-
+/*
+    Function name: initializeBuddySystem
+    Description: Initializes a new buddy system by allocating memory for a buddyList structure 
+                 and creating the initial node in the linked list with size 1024 and starting address -1.
+    Input: None
+    Output: buddyList* - Pointer to the newly initialized buddy system
+*/
 
 buddyList * initializeBuddySystem(){
     buddyList * temp=(buddyList*)malloc(sizeof(buddyList));
     temp->Head=createNode(0,1024,-1);
     return temp;
 }
+/*
+    Function name: isPowerOfTwo
+    Description: Determines if a given integer is a power of two.
+    Input: int number - The integer to be checked
+    Output: int - Returns 1 (true) if the number is a power of two, 0 (false) otherwise.
+*/
 
 int isPowerOfTwo(int number) {
     // A number is a power of 2 if and only if it has exactly one '1' bit set in its binary representation.
     return (number > 0) && ((number & (number - 1)) == 0);
 }
 
+/*
+    Function name: nextPowerOfTwo
+    Description: Finds the smallest power of two greater than or equal to the given number.
+                 If the given number is already a power of two, it returns the number itself.
+    Input: int number - The input number
+    Output: int - The smallest power of two greater than or equal to the input number
+*/
 int nextPowerOfTwo(int number){
     if(isPowerOfTwo(number)){
         return number;
@@ -43,6 +71,13 @@ int nextPowerOfTwo(int number){
     }
     return ans;
 }
+/*
+    Function name: Split
+    Description: Splits a given node in a linked list into two nodes, effectively dividing its size by 2.
+                 The new nodes are created with updated start addresses and sizes.
+    Input: Node* ptr - Pointer to the node to be split
+    Output: Node* - Pointer to the first node resulting from the split
+*/
 
 Node * Split(Node *ptr){
     Node * temp1=createNode(ptr->startAddress,ptr->Size/2,1);
@@ -62,6 +97,15 @@ Node * Split(Node *ptr){
     return temp1;
 }
 
+/*
+    Function name: allocateMemory
+    Description: Allocates memory from a buddy system for a given size of memory.
+                 It searches for a free node with a size equal to or greater than the requested size.
+                 If needed, it splits larger free nodes until an appropriate size is obtained.
+    Input: buddyList* ptr - Pointer to the buddyList representing the memory system
+           int sizeOfMemory - The size of memory to be allocated
+    Output: Node* - Pointer to the allocated node, or NULL if allocation fails
+*/
 
 Node * allocateMemory(buddyList * ptr,int sizeOfMemory){
     int fixedSize=nextPowerOfTwo(sizeOfMemory);
@@ -85,8 +129,6 @@ Node * allocateMemory(buddyList * ptr,int sizeOfMemory){
                 if(!temp->Prev){
                     ptr->Head=temp;
                 }
-                // printMemory(ptr);
-                // puts("*********");
             }
             if(temp->Size==fixedSize){
                 
@@ -102,6 +144,16 @@ Node * allocateMemory(buddyList * ptr,int sizeOfMemory){
     }
     return (void *)0;
 }
+
+/*
+    Function name: Merge
+    Description: Merges adjacent free nodes in a buddy system linked list to form a larger free block.
+                 The function combines the memory blocks represented by the given node and its next node.
+    Input: buddyList* buddy - Pointer to the buddyList representing the memory system
+           Node* ptr - Pointer to the node to be merged
+    Output: Node* - Pointer to the new node resulting from the merge
+*/
+
 
 Node * Merge(buddyList * buddy,Node * ptr){
     int newSize=ptr->Size*2;

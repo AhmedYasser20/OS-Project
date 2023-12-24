@@ -55,10 +55,11 @@ Node *AlloacteMemoryForProcess(struct Process p)
     Node *tempNode = allocateMemory(buddySystem, p.memsize);
     if (tempNode)
     {
-         fprintf(MemoryLog,"At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress));
+        fprintf(MemoryLog,"At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress));
         printf("At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress));
         return tempNode;
     }
+    puts("AYYYYYYY");
     PushLinkedList(WaitingQueue, p);
     return tempNode;
 }
@@ -100,7 +101,8 @@ void RevFrmGenetor()
 
     if (Rev != -1)
     {
-       AsignProcess(temp.p);
+        puts("ABOSNOW ASSigned");
+        AsignProcess(temp.p);
     }
     
 }
@@ -123,16 +125,19 @@ void dellocateMemoryForProcess(){
     printf("At time %d freed %d bytes from process %d from %d to %d\n",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
     fprintf(MemoryLog,"At time %d freed %d bytes from process %d from %d to %d\n",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
     dellocateMemory( buddySystem,PCB_Array[Processid_run_now].memoryBlock);
+    printMemory(buddySystem);
 }
 
 void CheckWaitingQueue(){
     struct linkedListProcessNode* current= WaitingQueue->head;
     while(current){
+      
         if(AsignProcess(current->key)){
             pop_idLinkedList(WaitingQueue,current->key.id);
-        }
+        }   
         current=current->next;
     }
+    printLIn(WaitingQueue);
 }
 
 
@@ -153,7 +158,7 @@ void SignalHandlerProcessesEnd(int sig)
     PCB_Array[Processid_run_now].State = End;
     PCB_Array[Processid_run_now].RemainingTime = 0;
     dellocateMemoryForProcess();
-      
+    CheckWaitingQueue();
       
     if (Algo == 2)
         pop_id(SRTNreadyQ, PCB_Array[Processid_run_now].P.id);
@@ -163,7 +168,7 @@ void SignalHandlerProcessesEnd(int sig)
         while (startRoundRobin == getClk())
             ;
         int x = current->key.id;
-        CheckWaitingQueue();
+      
         RevFrmGenetor();
         current = current->next;
         pop_id(RRreadyQ, x);
@@ -436,7 +441,7 @@ void RoundRobin()
         if (dummyQuantum == 0 && isRunning)
         {
             // printf("ContextSwitch\n");
-            CheckWaitingQueue();
+
             RevFrmGenetor();
             current = current->next;
             if (current == NULL)
@@ -481,7 +486,7 @@ void writePref()
     3. You then subtract each value from this average, square it, and add them together. (WTA1-X)^2 + (WTA2-X)^2 + (WTA3-X)^2 + (WTA4-X)^2
     4. Divide what you computed in (3) by the number of processes which is 4. What you computed so far is the variance.
     5. Standard deviation is the square root of the variance.
-*/
+    */
 
     double cpu_finish_time = getClk();
     double useful_Time = cpu_finish_time - totalwaittingtime;
