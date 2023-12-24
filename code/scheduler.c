@@ -21,7 +21,7 @@ int pidnow;
 int Quantum;
 int Algo;
 buddyList *buddySystem;
-struct Queue *WaitingQueue;
+struct LinkList *WaitingQueue;
 struct Queue *RRreadyQ;
 struct Queue *SRTNreadyQ;
 struct Queue *FCFSreadyQ;
@@ -57,8 +57,38 @@ Node *AlloacteMemoryForProcess(struct Process p)
         printf("At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress));
         return tempNode;
     }
-    Push(WaitingQueue, p);
+    PushLinkedList(WaitingQueue, p);
     return tempNode;
+}
+
+int AsignProcess(struct Process temp){
+     Node *tempMemoryNode = AlloacteMemoryForProcess(temp);
+        if (tempMemoryNode)
+        {
+            if (Algo == 1) // HPF
+            {
+                push(HPFReadyQueue, temp);
+            } // SRTN
+            else if (Algo == 2)
+            {
+                Push(SRTNreadyQ, temp);
+            }
+            else if (Algo == 3)
+            {
+                if (RRreadyQ->head == NULL)
+                {
+                    Push(RRreadyQ, temp);
+                    current = RRreadyQ->head;
+                }
+                else
+                {
+                    Push(RRreadyQ, temp);
+                }
+            }
+            SetPCB_Array(temp,tempMemoryNode);
+            return 1;
+        }
+        return 0;
 }
 
 void RevFrmGenetor()
@@ -68,32 +98,9 @@ void RevFrmGenetor()
 
     if (Rev != -1)
     {
-        Node *tempMemoryNode = AlloacteMemoryForProcess(temp.p);
-        if (tempMemoryNode)
-        {
-            if (Algo == 1) // HPF
-            {
-                push(HPFReadyQueue, temp.p);
-            } // SRTN
-            else if (Algo == 2)
-            {
-                Push(SRTNreadyQ, temp.p);
-            }
-            else if (Algo == 3)
-            {
-                if (RRreadyQ->head == NULL)
-                {
-                    Push(RRreadyQ, temp.p);
-                    current = RRreadyQ->head;
-                }
-                else
-                {
-                    Push(RRreadyQ, temp.p);
-                }
-            }
-            SetPCB_Array(temp.p,tempMemoryNode);
-        }
+       AsignProcess(temp.p);
     }
+    
 }
 
 /*
@@ -116,7 +123,13 @@ void dellocateMemoryForProcess(){
 }
 
 void CheckWaitingQueue(){
-
+    struct linkedListProcessNode* current= WaitingQueue->head;
+    while(current){
+        if(AsignProcess(current->key)){
+            pop_idLinkedList(WaitingQueue,current->key.id);
+        }
+        current=current->next;
+    }
 }
 
 
@@ -147,6 +160,7 @@ void SignalHandlerProcessesEnd(int sig)
         while (startRoundRobin == getClk())
             ;
         int x = current->key.id;
+        CheckWaitingQueue();
         RevFrmGenetor();
         current = current->next;
         pop_id(RRreadyQ, x);
@@ -419,6 +433,7 @@ void RoundRobin()
         if (dummyQuantum == 0 && isRunning)
         {
             // printf("ContextSwitch\n");
+            CheckWaitingQueue();
             RevFrmGenetor();
             current = current->next;
             if (current == NULL)
@@ -492,7 +507,7 @@ int main(int argc, char *argv[])
     PCB_Array = CreatePCB_Array();
     buddySystem = initializeBuddySystem();
     HPFReadyQueue = CreatePriorityQueueOfProcesses();
-    WaitingQueue = CreateQueueOfProcess();
+    WaitingQueue = CreateLinkedListOfProcess();
     RRreadyQ = CreateQueueOfProcess();
     SRTNreadyQ = CreateQueueOfProcess();
     FCFSreadyQ = CreateQueueOfProcess();
@@ -502,7 +517,7 @@ int main(int argc, char *argv[])
 
     do
     {
-
+        CheckWaitingQueue();
         RevFrmGenetor();
         if (Algo == 1)
         {
