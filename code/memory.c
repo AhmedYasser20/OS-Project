@@ -27,6 +27,7 @@ Node * createNode(int startAddress,int size,int child){
 
 
 void freeNode(Node * ptr){
+    if(ptr!= NULL)
     free(ptr);
 }
 /*

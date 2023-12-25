@@ -55,7 +55,7 @@ Node *AlloacteMemoryForProcess(struct Process p,int pushtoWaiting)
     Node *tempNode = allocateMemory(buddySystem, p.memsize);
     if (tempNode)
     {
-        fprintf(MemoryLog,"At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress));
+        fprintf(MemoryLog,"At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress)-1);
         printf("At time %d allocated %d bytes for process %d from %d to %d\n",getClk(), p.memsize,p.id,tempNode->startAddress,(tempNode->Size+tempNode->startAddress));
         return tempNode;
     }
@@ -122,7 +122,7 @@ void SignalHandlerGentorEnd(int sig)
 
 void dellocateMemoryForProcess(){
     printf("At time %d freed %d bytes from process %d from %d to %d\n",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
-    fprintf(MemoryLog,"At time %d freed %d bytes from process %d from %d to %d\n",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size);
+    fprintf(MemoryLog,"At time %d freed %d bytes from process %d from %d to %d\n",getClk(),PCB_Array[Processid_run_now].P.memsize,PCB_Array[Processid_run_now].P.id,PCB_Array[Processid_run_now].memoryBlock->startAddress,PCB_Array[Processid_run_now].memoryBlock->startAddress+PCB_Array[Processid_run_now].memoryBlock->Size -1);
     dellocateMemory( buddySystem,PCB_Array[Processid_run_now].memoryBlock);
 }
 
